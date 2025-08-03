@@ -1,4 +1,4 @@
-// server.js - UPDATED WITH WEBRTC VOICE CHAT SUPPORT
+// server.js - UPDATED WITH WEBRTC VOICE CHAT SUPPORT AND CORS FIX
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -10,12 +10,12 @@ const app = express();
 const server = http.createServer(app);
 
 // =============================================================================
-// ENVIRONMENT CONFIGURATION
+// ENVIRONMENT CONFIGURATION - UPDATED
 // =============================================================================
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'cotog-production-secret-change-this-in-production';
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cotog-backend.onrender.com';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cotog-collaborative-editor-222.onrender.com';
 
 console.log('🚀 COTOG Backend Starting...');
 console.log('📊 Environment:', NODE_ENV);
@@ -23,27 +23,46 @@ console.log('🌐 Port:', PORT);
 console.log('🔗 Frontend URL:', FRONTEND_URL);
 
 // =============================================================================
-// CORS CONFIGURATION FOR PRODUCTION
+// CORS CONFIGURATION FOR PRODUCTION - FIXED
 // =============================================================================
 const corsOptions = {
   origin: [
+    // Your actual frontend domain
     FRONTEND_URL,
+    'https://cotog-collaborative-editor-222.onrender.com',
+    'https://cotog-frontend.onrender.com',
     'https://cotog-backend.onrender.com',
+    
+    // Development domains
     'http://127.0.0.1:3000',
+    'http://localhost:3000',
+    
+    // Pattern matching for Render.com domains
     /\.onrender\.com$/,
     /\.vercel\.app$/,
+    /\.netlify\.app$/,
     /\.render\.com$/,
+    
+    // Local development patterns
     /^http:\/\/localhost:[0-9]+$/,
     /^http:\/\/127\.0\.0\.1:[0-9]+$/
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'x-requested-with',
+    'Accept',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ]
 };
 
 // =============================================================================
-// SOCKET.IO CONFIGURATION WITH WEBRTC SUPPORT
+// SOCKET.IO CONFIGURATION WITH WEBRTC SUPPORT - UPDATED CORS
 // =============================================================================
 const io = new Server(server, {
   cors: corsOptions,
@@ -62,6 +81,45 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.set('trust proxy', 1);
+
+// Additional explicit CORS handling
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  console.log(`📡 Request from origin: ${origin}`);
+  
+  // List of allowed origins
+  const allowedOrigins = [
+    FRONTEND_URL,
+    'https://cotog-collaborative-editor-222.onrender.com',
+    'https://cotog-frontend.onrender.com',
+    'https://cotog-backend.onrender.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ];
+  
+  // Check if origin is explicitly allowed or matches pattern
+  if (allowedOrigins.includes(origin) || (origin && /\.onrender\.com$/.test(origin))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    console.log(`✅ CORS allowed for origin: ${origin}`);
+  } else if (origin) {
+    console.log(`❌ CORS denied for origin: ${origin}`);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with, Accept, Origin');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    console.log(`🔄 CORS preflight request from: ${origin}`);
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 // Security headers
 app.use((req, res, next) => {
@@ -283,8 +341,35 @@ const initializeRoomAudio = (roomId) => {
 };
 
 // =============================================================================
-// API ROUTES (keeping existing routes)
+// API ROUTES - ENHANCED HEALTH CHECKS
 // =============================================================================
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'COTOG Backend API',
+    status: 'running',
+    version: '1.0.0',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      apiHealth: '/api/health',
+      auth: '/api/auth/*',
+      rooms: '/api/rooms/*'
+    },
+    features: {
+      websocket: 'Socket.IO enabled',
+      webrtc: 'Voice chat supported',
+      cors: 'Enabled'
+    },
+    cors: {
+      enabled: true,
+      allowedOrigin: FRONTEND_URL,
+      credentials: true
+    }
+  });
+});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -296,7 +381,9 @@ app.get('/health', (req, res) => {
     version: '1.0.0',
     activeRooms: Object.keys(roomsData).length,
     activeSessions: Object.keys(userSessions).length,
-    voiceRooms: Object.keys(voiceRooms).length
+    voiceRooms: Object.keys(voiceRooms).length,
+    frontendUrl: FRONTEND_URL,
+    corsEnabled: true
   });
 });
 
@@ -309,25 +396,31 @@ app.get('/api/health', (req, res) => {
     environment: NODE_ENV,
     rooms: Object.keys(roomsData).length,
     users: Object.keys(userSessions).length,
-    voiceConnections: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0)
+    voiceConnections: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
+    corsConfig: {
+      frontendUrl: FRONTEND_URL,
+      allowCredentials: true,
+      methods: corsOptions.methods,
+      allowedHeaders: corsOptions.allowedHeaders
+    }
   });
 });
 
-// Authentication routes (keeping existing)
+// Authentication routes
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
+
+    console.log(`🔍 Login attempt for: ${email} from origin: ${req.headers.origin}`);
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    console.log('🔍 Login attempt for:', email);
-
     const user = await userService.validateCredentials(email, password);
     
     if (!user) {
-      console.log('❌ Login failed for:', email);
+      console.log(`❌ Login failed for: ${email}`);
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -340,7 +433,7 @@ app.post('/api/auth/login', async (req, res) => {
       { expiresIn: tokenExpiry }
     );
 
-    console.log('✅ Login successful for:', email);
+    console.log(`✅ Login successful for: ${email}`);
 
     res.json({
       success: true,
@@ -358,6 +451,8 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { username, email, password, confirmPassword, firstName, lastName } = req.body;
+
+    console.log(`📝 Signup attempt for: ${email} from origin: ${req.headers.origin}`);
 
     if (!username || !email || !password || !firstName || !lastName) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -381,7 +476,7 @@ app.post('/api/auth/signup', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    console.log('✅ User created:', email);
+    console.log(`✅ User created: ${email}`);
 
     res.status(201).json({
       success: true,
@@ -438,11 +533,13 @@ app.post('/api/auth/verify', async (req, res) => {
   }
 });
 
-// Room management routes (keeping existing)
+// Room management routes
 app.post('/api/rooms/create', authenticateToken, (req, res) => {
   try {
     const { roomName, password, maxUsers, isPrivate, description } = req.body;
     const userId = req.user.userId;
+    
+    console.log(`🏠 Room creation attempt by user ${userId} from origin: ${req.headers.origin}`);
     
     if (!roomName || !password) {
       return res.status(400).json({ error: 'Room name and password are required' });
@@ -533,7 +630,7 @@ app.get('/api/room/:roomId', (req, res) => {
 io.use(authenticateSocket);
 
 io.on('connection', (socket) => {
-  console.log(`🔌 User connected: ${socket.username} (${socket.id})`);
+  console.log(`🔌 User connected: ${socket.username} (${socket.id}) from ${socket.handshake.headers.origin}`);
 
   userSessions[socket.id] = {
     userId: socket.userId,
@@ -543,13 +640,11 @@ io.on('connection', (socket) => {
     connectedAt: new Date()
   };
 
-  // =============================================================================
-  // EXISTING ROOM EVENTS (keeping all existing functionality)
-  // =============================================================================
-
   // Join room
   socket.on('joinRoom', ({ roomId, roomPassword }) => {
     try {
+      console.log(`🚪 User ${socket.username} attempting to join room ${roomId}`);
+      
       if (!roomsData[roomId] || !roomsData[roomId].isActive) {
         socket.emit('error', { message: 'Room not found or no longer active' });
         return;
@@ -771,7 +866,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Audio permission handling (keeping existing)
+  // Audio permission handling
   socket.on('audioPermissionRequest', ({ roomId, username }) => {
     try {
       const userSession = userSessions[socket.id];
@@ -848,7 +943,7 @@ io.on('connection', (socket) => {
   });
 
   // =============================================================================
-  // NEW WEBRTC VOICE CHAT EVENTS
+  // WEBRTC VOICE CHAT EVENTS
   // =============================================================================
 
   // Join voice room
@@ -1119,7 +1214,10 @@ app.use((error, req, res, next) => {
 app.use('*', (req, res) => {
   res.status(404).json({ 
     error: 'Route not found',
+    requestedPath: req.originalUrl,
+    method: req.method,
     availableEndpoints: [
+      'GET /',
       'GET /health',
       'GET /api/health',
       'POST /api/auth/login',
@@ -1127,7 +1225,11 @@ app.use('*', (req, res) => {
       'POST /api/auth/verify',
       'POST /api/rooms/create',
       'GET /api/room/:roomId'
-    ]
+    ],
+    cors: {
+      enabled: true,
+      frontendUrl: FRONTEND_URL
+    }
   });
 });
 
@@ -1208,6 +1310,11 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('   🔐 Permission-based access');
   console.log('   🎵 Speaking detection');
   console.log('   📡 Real-time signaling');
+  console.log('');
+  console.log('🌐 CORS Configuration:');
+  console.log(`   ✅ Frontend: ${FRONTEND_URL}`);
+  console.log('   ✅ Credentials: enabled');
+  console.log('   ✅ WebRTC signaling: enabled');
   console.log('');
   console.log('✅ Backend ready for frontend connection!');
   console.log('');
