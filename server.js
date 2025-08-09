@@ -1,4 +1,4 @@
-// server.js - COMPLETE ENHANCED WEBRTC IMPLEMENTATION WITH CHROME COMPATIBILITY
+// server.js - CLEANED VERSION WITH UNUSED CODE REMOVED
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -10,20 +10,20 @@ const app = express();
 const server = http.createServer(app);
 
 // =============================================================================
-// ENHANCED ENVIRONMENT CONFIGURATION
+// ENVIRONMENT CONFIGURATION
 // =============================================================================
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'cotog-production-secret-change-this-in-production';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cotog-collaborative-editor-222.onrender.com';
 
-console.log('🚀 COTOG Backend with Enhanced WebRTC Starting...');
+console.log('🚀 COTOG Backend Starting...');
 console.log('📊 Environment:', NODE_ENV);
 console.log('🌐 Port:', PORT);
 console.log('🔗 Frontend URL:', FRONTEND_URL);
 
 // =============================================================================
-// ADVANCED CORS CONFIGURATION WITH WEBRTC OPTIMIZATION
+// CORS CONFIGURATION
 // =============================================================================
 const corsOptions = {
   origin: [
@@ -50,14 +50,12 @@ const corsOptions = {
     'Accept',
     'Origin',
     'Access-Control-Request-Method',
-    'Access-Control-Request-Headers',
-    'X-WebRTC-Session-Id',
-    'X-Voice-Room-Id'
+    'Access-Control-Request-Headers'
   ]
 };
 
 // =============================================================================
-// ENHANCED SOCKET.IO CONFIGURATION WITH WEBRTC OPTIMIZATIONS
+// SOCKET.IO CONFIGURATION
 // =============================================================================
 const io = new Server(server, {
   cors: corsOptions,
@@ -66,27 +64,23 @@ const io = new Server(server, {
   pingTimeout: 60000,
   pingInterval: 25000,
   upgradeTimeout: 30000,
-  maxHttpBufferSize: 2e6, // Increased for WebRTC data
-  // WebRTC-specific optimizations
-  parser: require('socket.io-parser'),
+  maxHttpBufferSize: 2e6,
   compression: true,
   cookie: false,
   serveClient: false,
-  // Enhanced connection handling
   connectTimeout: 45000,
-  // Enable binary support for WebRTC
   binary: true
 });
 
 // =============================================================================
-// EXPRESS MIDDLEWARE WITH WEBRTC HEADERS
+// EXPRESS MIDDLEWARE
 // =============================================================================
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.set('trust proxy', 1);
 
-// Enhanced CORS handling with WebRTC support
+// Enhanced CORS handling
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   console.log(`📡 Request from origin: ${origin}`);
@@ -108,7 +102,7 @@ app.use((req, res, next) => {
   }
   
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with, Accept, Origin, X-WebRTC-Session-Id, X-Voice-Room-Id');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-requested-with, Accept, Origin');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400');
   
@@ -121,20 +115,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enhanced security headers with WebRTC considerations
+// Security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // WebRTC-specific security headers
   res.setHeader('Feature-Policy', 'microphone *; camera *');
   res.setHeader('Permissions-Policy', 'microphone=*, camera=*');
   next();
 });
 
 // =============================================================================
-// ENHANCED DATA STORES WITH WEBRTC OPTIMIZATIONS
+// DATA STORES
 // =============================================================================
 
 // Demo users with pre-hashed passwords
@@ -185,20 +178,19 @@ const users = [
   }
 ];
 
-// Enhanced room management with advanced WebRTC support
+// Room management
 const rooms = {}; // { roomId: [ { id, username, userId, joinedAt, role } ] }
-const roomsData = {}; // Room metadata with WebRTC configuration
+const roomsData = {}; // Room metadata
 const messageHistory = {}; // Chat history
-const userSessions = {}; // Socket sessions with WebRTC state
+const userSessions = {}; // Socket sessions
 
-// Advanced WebRTC audio system
-const audioPermissions = {}; // { roomId: { username: boolean } }
-const pendingAudioRequests = {}; // { roomId: [ { username, timestamp } ] }
-const voiceRooms = {}; // { roomId: [ { userId, username, socketId, joinedAt, connectionState } ] }
-const voiceSignals = {}; // Enhanced WebRTC signaling data store
-const voiceConnectionStats = {}; // Detailed connection quality tracking
+// Simplified WebRTC system
+const voiceRooms = {}; // { roomId: [ { userId, username, socketId, joinedAt } ] }
+const voiceSignals = {}; // WebRTC signaling data store
 const peerConnections = {}; // Track active peer connections
-const iceServers = [ // Enhanced ICE servers for better connectivity
+
+// ICE servers configuration
+const iceServers = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
   { urls: 'stun:stun2.l.google.com:19302' },
@@ -206,29 +198,17 @@ const iceServers = [ // Enhanced ICE servers for better connectivity
   { urls: 'stun:stun4.l.google.com:19302' }
 ];
 
-// WebRTC configuration for Chrome optimization
+// Simplified WebRTC configuration
 const webrtcConfig = {
   iceServers,
   iceCandidatePoolSize: 10,
   bundlePolicy: 'balanced',
   rtcpMuxPolicy: 'require',
-  // Chrome-specific optimizations
-  sdpSemantics: 'unified-plan',
-  // Enable better audio quality
-  audioConstraints: {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true,
-    googEchoCancellation: true,
-    googAutoGainControl: true,
-    googNoiseSuppression: true,
-    googHighpassFilter: true,
-    googTypingNoiseDetection: true
-  }
+  sdpSemantics: 'unified-plan'
 };
 
 // =============================================================================
-// USER SERVICE (UNCHANGED BUT OPTIMIZED)
+// USER SERVICE
 // =============================================================================
 const userService = {
   findByEmail: (email) => users.find(user => user.email.toLowerCase() === email.toLowerCase()),
@@ -301,7 +281,7 @@ const userService = {
 };
 
 // =============================================================================
-// AUTHENTICATION MIDDLEWARE (ENHANCED)
+// AUTHENTICATION MIDDLEWARE
 // =============================================================================
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -348,7 +328,7 @@ const authenticateSocket = (socket, next) => {
 };
 
 // =============================================================================
-// ENHANCED UTILITY FUNCTIONS FOR WEBRTC
+// UTILITY FUNCTIONS
 // =============================================================================
 const generateRoomId = () => Math.random().toString(36).substring(2, 10);
 
@@ -358,27 +338,14 @@ const cleanupEmptyRooms = () => {
       delete rooms[roomId];
       delete roomsData[roomId];
       delete messageHistory[roomId];
-      delete audioPermissions[roomId];
-      delete pendingAudioRequests[roomId];
       delete voiceRooms[roomId];
       delete voiceSignals[roomId];
-      delete voiceConnectionStats[roomId];
       delete peerConnections[roomId];
       console.log(`🧹 Cleaned up empty room: ${roomId}`);
     }
   }
 };
 
-const initializeRoomAudio = (roomId) => {
-  if (!audioPermissions[roomId]) audioPermissions[roomId] = {};
-  if (!pendingAudioRequests[roomId]) pendingAudioRequests[roomId] = [];
-  if (!voiceRooms[roomId]) voiceRooms[roomId] = [];
-  if (!voiceSignals[roomId]) voiceSignals[roomId] = {};
-  if (!voiceConnectionStats[roomId]) voiceConnectionStats[roomId] = {};
-  if (!peerConnections[roomId]) peerConnections[roomId] = {};
-};
-
-// Enhanced cleanup for stale voice users with detailed logging
 const cleanupStaleVoiceUsers = (roomId) => {
   if (!voiceRooms[roomId]) return;
   
@@ -395,12 +362,6 @@ const cleanupStaleVoiceUsers = (roomId) => {
       if (peerConnections[roomId] && peerConnections[roomId][voiceUser.userId]) {
         delete peerConnections[roomId][voiceUser.userId];
       }
-      
-      // Clean up connection stats
-      if (voiceConnectionStats[roomId] && voiceConnectionStats[roomId][voiceUser.userId]) {
-        voiceConnectionStats[roomId][voiceUser.userId].disconnectedAt = new Date();
-        voiceConnectionStats[roomId][voiceUser.userId].disconnectReason = 'stale_connection';
-      }
     }
     
     return !isStale;
@@ -415,46 +376,19 @@ const cleanupStaleVoiceUsers = (roomId) => {
     delete voiceRooms[roomId];
     delete voiceSignals[roomId];
     delete peerConnections[roomId];
-    // Keep stats for debugging for 5 minutes
-    setTimeout(() => {
-      delete voiceConnectionStats[roomId];
-    }, 5 * 60 * 1000);
   }
 };
 
-// WebRTC connection monitoring
-const monitorConnection = (roomId, userId, connectionData) => {
-  if (!voiceConnectionStats[roomId]) {
-    voiceConnectionStats[roomId] = {};
-  }
-  
-  if (!voiceConnectionStats[roomId][userId]) {
-    voiceConnectionStats[roomId][userId] = {
-      userId,
-      joinedAt: new Date(),
-      connectionAttempts: 0,
-      successfulConnections: 0,
-      failedConnections: 0,
-      lastActivity: new Date(),
-      connectionQuality: 'unknown',
-      iceStates: {},
-      signalExchanges: 0
-    };
-  }
-  
-  Object.assign(voiceConnectionStats[roomId][userId], connectionData, { lastActivity: new Date() });
-};
-
 // =============================================================================
-// API ROUTES - ENHANCED WITH ADVANCED WEBRTC MONITORING
+// API ROUTES
 // =============================================================================
 
-// Root endpoint with comprehensive WebRTC status
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'COTOG Backend API - Enhanced WebRTC v2.0',
+    message: 'COTOG Backend API - Cleaned Version',
     status: 'running',
-    version: '2.0.0',
+    version: '2.1.0',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
     endpoints: {
@@ -463,29 +397,23 @@ app.get('/', (req, res) => {
       auth: '/api/auth/*',
       rooms: '/api/rooms/*',
       voiceStatus: '/api/voice-rooms/status',
-      webrtcDebug: '/api/webrtc/debug/:roomId',
       webrtcConfig: '/api/webrtc/config'
     },
     features: {
       websocket: 'Socket.IO v4 enabled',
-      webrtc: 'Enhanced P2P voice chat with Chrome optimizations',
-      cors: 'Multi-origin enabled with WebRTC headers',
-      signaling: 'Advanced WebRTC signaling with error recovery',
-      iceServers: `${iceServers.length} STUN servers configured`,
-      peerDiscovery: 'Immediate with staggered connections',
-      qualityMonitoring: 'Real-time connection quality tracking'
+      webrtc: 'Simplified P2P voice chat',
+      cors: 'Multi-origin enabled',
+      signaling: 'WebRTC signaling enabled'
     },
     voiceStats: {
       activeVoiceRooms: Object.keys(voiceRooms).length,
       totalVoiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-      activePeerConnections: Object.values(peerConnections).reduce((sum, room) => Object.keys(room).length + sum, 0),
-      totalSignalExchanges: Object.values(voiceConnectionStats).reduce((sum, room) => 
-        Object.values(room).reduce((roomSum, user) => roomSum + (user.signalExchanges || 0), 0) + sum, 0)
+      activePeerConnections: Object.values(peerConnections).reduce((sum, room) => Object.keys(room).length + sum, 0)
     }
   });
 });
 
-// Enhanced health check with detailed WebRTC metrics
+// Health check
 app.get('/health', (req, res) => {
   const uptime = process.uptime();
   const memoryUsage = process.memoryUsage();
@@ -496,7 +424,7 @@ app.get('/health', (req, res) => {
     uptime: uptime,
     uptimeFormatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`,
     environment: NODE_ENV,
-    version: '2.0.0',
+    version: '2.1.0',
     memory: {
       rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
@@ -509,23 +437,14 @@ app.get('/health', (req, res) => {
     voiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
     peerConnections: Object.values(peerConnections).reduce((sum, room) => Object.keys(room).length + sum, 0),
     frontendUrl: FRONTEND_URL,
-    corsEnabled: true,
-    webrtcFeatures: {
-      signaling: 'enhanced-v2',
-      peerDiscovery: 'immediate-staggered',
-      errorRecovery: 'automatic-retry',
-      staleUserCleanup: 'enabled-advanced',
-      connectionMonitoring: 'real-time',
-      qualityTracking: 'enabled',
-      chromeOptimizations: 'enabled'
-    }
+    corsEnabled: true
   });
 });
 
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
-    service: 'COTOG Backend with Enhanced WebRTC v2.0',
+    service: 'COTOG Backend - Cleaned Version',
     timestamp: new Date().toISOString(),
     uptime: Math.floor(process.uptime()),
     environment: NODE_ENV,
@@ -537,20 +456,11 @@ app.get('/api/health', (req, res) => {
       allowCredentials: true,
       methods: corsOptions.methods,
       allowedHeaders: corsOptions.allowedHeaders
-    },
-    webrtcStatus: {
-      activeVoiceRooms: Object.keys(voiceRooms).length,
-      totalVoiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-      signalingEnabled: true,
-      peerDiscoveryFixed: true,
-      connectionMonitoring: true,
-      qualityMetrics: true,
-      iceServers: iceServers.length
     }
   });
 });
 
-// Enhanced voice room status endpoint
+// Voice room status endpoint
 app.get('/api/voice-rooms/status', authenticateToken, (req, res) => {
   try {
     const voiceRoomStats = {
@@ -563,16 +473,10 @@ app.get('/api/voice-rooms/status', authenticateToken, (req, res) => {
         users: users.map(u => ({
           userId: u.userId,
           username: u.username,
-          joinedAt: u.joinedAt,
-          connectionState: u.connectionState || 'unknown'
+          joinedAt: u.joinedAt
         })),
-        peerConnections: Object.keys(peerConnections[roomId] || {}).length,
-        avgConnectionQuality: voiceConnectionStats[roomId] ? 
-          Object.values(voiceConnectionStats[roomId])
-            .map(stats => stats.connectionQuality === 'good' ? 3 : stats.connectionQuality === 'fair' ? 2 : 1)
-            .reduce((sum, val) => sum + val, 0) / Object.values(voiceConnectionStats[roomId]).length || 0 : 0
+        peerConnections: Object.keys(peerConnections[roomId] || {}).length
       })),
-      connectionStats: voiceConnectionStats,
       systemHealth: {
         memoryUsage: process.memoryUsage(),
         uptime: process.uptime(),
@@ -587,21 +491,19 @@ app.get('/api/voice-rooms/status', authenticateToken, (req, res) => {
   }
 });
 
-// NEW: WebRTC configuration endpoint
+// WebRTC configuration endpoint
 app.get('/api/webrtc/config', authenticateToken, (req, res) => {
   try {
     res.json({
       iceServers,
       configuration: webrtcConfig,
       features: {
-        chromeOptimizations: true,
-        audioConstraints: webrtcConfig.audioConstraints,
-        connectionMonitoring: true,
-        automaticRetry: true,
-        staleUserCleanup: true
+        simplifiedVersion: true,
+        noPermissionsRequired: true,
+        instantAccess: true
       },
       serverInfo: {
-        version: '2.0.0',
+        version: '2.1.0',
         environment: NODE_ENV,
         timestamp: new Date().toISOString()
       }
@@ -612,53 +514,7 @@ app.get('/api/webrtc/config', authenticateToken, (req, res) => {
   }
 });
 
-// Enhanced WebRTC debugging endpoint
-app.get('/api/webrtc/debug/:roomId', authenticateToken, (req, res) => {
-  try {
-    const { roomId } = req.params;
-    
-    const debugInfo = {
-      roomId,
-      timestamp: new Date().toISOString(),
-      voiceUsers: voiceRooms[roomId] || [],
-      connectionStats: voiceConnectionStats[roomId] || {},
-      peerConnections: Object.keys(peerConnections[roomId] || {}),
-      signalData: voiceSignals[roomId] || {},
-      roomMetadata: roomsData[roomId] || null,
-      audioPermissions: audioPermissions[roomId] || {},
-      pendingRequests: pendingAudioRequests[roomId] || [],
-      webrtcConfiguration: webrtcConfig,
-      serverStats: {
-        totalVoiceRooms: Object.keys(voiceRooms).length,
-        totalVoiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-        memoryUsage: process.memoryUsage(),
-        uptime: process.uptime()
-      },
-      chromeOptimizations: {
-        enabled: true,
-        features: [
-          'Enhanced ICE servers with multiple STUN endpoints',
-          'Staggered peer connection establishment',
-          'Chrome-specific SDP modifications for audio quality',
-          'Advanced connection quality tracking',
-          'Automatic stale user cleanup',
-          'Real-time connection monitoring',
-          'Enhanced error handling and recovery',
-          'Optimized audio constraints for Chrome',
-          'Binary support for WebRTC data',
-          'Improved disconnect handling'
-        ]
-      }
-    };
-    
-    res.json(debugInfo);
-  } catch (error) {
-    console.error('WebRTC debug error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Authentication routes (unchanged)
+// Authentication routes (keeping existing ones)
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
@@ -819,12 +675,11 @@ app.post('/api/rooms/create', authenticateToken, (req, res) => {
       isActive: true,
       currentLanguage: 'javascript',
       currentCode: '// Welcome to collaborative coding!\n// Start typing to share your code with the team...',
-      webrtcConfig: webrtcConfig // Add WebRTC configuration to room
+      webrtcConfig: webrtcConfig
     };
     
     rooms[roomId] = [];
     messageHistory[roomId] = [];
-    initializeRoomAudio(roomId);
     
     console.log(`🏠 Room created: ${roomId} (${roomName}) by ${user.username}`);
     
@@ -880,7 +735,7 @@ app.get('/api/room/:roomId', (req, res) => {
 });
 
 // =============================================================================
-// ENHANCED SOCKET.IO CONNECTION HANDLING WITH ADVANCED WEBRTC SUPPORT
+// SOCKET.IO CONNECTION HANDLING
 // =============================================================================
 io.use(authenticateSocket);
 
@@ -897,7 +752,7 @@ io.on('connection', (socket) => {
     browser: socket.handshake.headers['user-agent']?.includes('Chrome') ? 'Chrome' : 'Other'
   };
 
-  // Join room with enhanced WebRTC initialization
+  // Join room
   socket.on('joinRoom', ({ roomId, roomPassword }) => {
     try {
       console.log(`🚪 User ${socket.username} attempting to join room ${roomId}`);
@@ -932,12 +787,8 @@ io.on('connection', (socket) => {
       let userRole = 'member';
       if (room.createdBy === socket.userId) {
         userRole = 'owner';
-        if (!audioPermissions[roomId]) initializeRoomAudio(roomId);
-        audioPermissions[roomId][socket.username] = true;
       } else if (socket.userRole === 'admin') {
         userRole = 'moderator';
-        if (!audioPermissions[roomId]) initializeRoomAudio(roomId);
-        audioPermissions[roomId][socket.username] = true;
       }
       
       if (!rooms[roomId]) rooms[roomId] = [];
@@ -965,7 +816,6 @@ io.on('connection', (socket) => {
 
       io.to(roomId).emit('roomUsers', rooms[roomId]);
 
-      // Enhanced join success with WebRTC configuration
       socket.emit('joinSuccess', {
         roomId,
         username: socket.username,
@@ -980,7 +830,6 @@ io.on('connection', (socket) => {
           currentLanguage: room.currentLanguage,
           webrtcEnabled: true
         },
-        audioPermissions: audioPermissions[roomId] || {},
         webrtcConfig: webrtcConfig
       });
 
@@ -990,7 +839,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Chat messages (unchanged)
+  // Chat messages
   socket.on('chatMessage', ({ roomId, message }) => {
     try {
       const userSession = userSessions[socket.id];
@@ -1031,7 +880,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Code changes (unchanged)
+  // Code changes
   socket.on('codeChange', ({ roomId, code, language }) => {
     const userSession = userSessions[socket.id];
     
@@ -1051,7 +900,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Language changes (unchanged)
+  // Language changes
   socket.on('languageChange', (data) => {
     const { roomId, language, code } = data;
     
@@ -1116,7 +965,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Typing indicators (unchanged)
+  // Typing indicators
   socket.on('typing', ({ roomId, isTyping }) => {
     const userSession = userSessions[socket.id];
     
@@ -1128,97 +977,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Audio permission handling (enhanced)
-  socket.on('audioPermissionRequest', ({ roomId, username }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      initializeRoomAudio(roomId);
-
-      if (audioPermissions[roomId][username]) {
-        socket.emit('error', { message: 'You already have audio permission' });
-        return;
-      }
-
-      const existingRequest = pendingAudioRequests[roomId].find(req => req.username === username);
-      if (existingRequest) {
-        socket.emit('error', { message: 'Permission request already pending' });
-        return;
-      }
-
-      const request = { 
-        username, 
-        timestamp: new Date().toISOString(),
-        userId: userSession.userId,
-        webrtcSessionId: userSession.webrtcSessionId
-      };
-      pendingAudioRequests[roomId].push(request);
-
-      rooms[roomId]?.forEach(user => {
-        if (user.role === 'owner' || user.role === 'moderator') {
-          const targetSocket = io.sockets.sockets.get(user.id);
-          if (targetSocket) {
-            targetSocket.emit('audioPermissionRequest', request);
-          }
-        }
-      });
-
-      console.log(`🎤 Audio permission requested by ${username} in room ${roomId}`);
-
-    } catch (error) {
-      console.error('Error handling audio permission request:', error);
-    }
-  });
-
-  socket.on('audioPermissionResponse', ({ roomId, username, granted }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      const currentUser = rooms[roomId]?.find(u => u.id === socket.id);
-      if (!currentUser || (currentUser.role !== 'owner' && currentUser.role !== 'moderator')) {
-        socket.emit('error', { message: 'You do not have permission to grant audio access' });
-        return;
-      }
-
-      initializeRoomAudio(roomId);
-
-      pendingAudioRequests[roomId] = pendingAudioRequests[roomId].filter(
-        req => req.username !== username
-      );
-
-      audioPermissions[roomId][username] = granted;
-
-      const targetUser = rooms[roomId]?.find(u => u.username === username);
-      if (targetUser) {
-        const targetSocket = io.sockets.sockets.get(targetUser.id);
-        if (targetSocket) {
-          targetSocket.emit('audioPermissionResponse', {
-            username,
-            granted,
-            respondedBy: currentUser.username,
-            webrtcConfig: granted ? webrtcConfig : null
-          });
-        }
-      }
-
-      io.to(roomId).emit('audioPermissionsUpdate', {
-        permissions: audioPermissions[roomId]
-      });
-
-      console.log(`🎤 Audio permission ${granted ? 'granted' : 'denied'} for ${username} by ${currentUser.username}`);
-
-    } catch (error) {
-      console.error('Error handling audio permission response:', error);
-    }
-  });
-
   // =============================================================================
-  // ADVANCED WEBRTC VOICE CHAT EVENTS - COMPLETE CHROME-OPTIMIZED IMPLEMENTATION
+  // SIMPLIFIED WEBRTC VOICE CHAT EVENTS
   // =============================================================================
 
-  // Enhanced join voice room with comprehensive Chrome compatibility
+  // Join voice room - simplified, no permissions
   socket.on('join-voice-room', ({ roomId, userId, username }) => {
     try {
       console.log(`🎙️ ${username} joining voice room ${roomId} [Session: ${socket.webrtcSessionId}]`);
@@ -1229,35 +992,18 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Check audio permissions
-      const roomUser = rooms[roomId]?.find(u => u.id === socket.id);
-      if (!roomUser) {
-        socket.emit('error', { message: 'User not found in room' });
-        return;
-      }
-
-      const hasPermission = roomUser.role === 'owner' || 
-                          roomUser.role === 'moderator' || 
-                          audioPermissions[roomId]?.[username];
-
-      if (!hasPermission) {
-        socket.emit('error', { message: 'Audio permission required' });
-        return;
-      }
-
       // Initialize voice room if it doesn't exist
       if (!voiceRooms[roomId]) {
         voiceRooms[roomId] = [];
       }
 
-      // Check if user is already in voice room and handle reconnection
+      // Check if user is already in voice room
       const existingVoiceUser = voiceRooms[roomId].find(u => u.userId === userId);
       if (existingVoiceUser) {
         console.log(`⚠️ User ${username} already in voice room, updating connection info`);
         existingVoiceUser.socketId = socket.id;
         existingVoiceUser.webrtcSessionId = socket.webrtcSessionId;
         existingVoiceUser.reconnectedAt = new Date();
-        existingVoiceUser.connectionState = 'reconnected';
       } else {
         // Add user to voice room
         const voiceUser = {
@@ -1266,7 +1012,6 @@ io.on('connection', (socket) => {
           socketId: socket.id,
           webrtcSessionId: socket.webrtcSessionId,
           joinedAt: new Date(),
-          connectionState: 'joining',
           browser: userSession.browser
         };
         voiceRooms[roomId].push(voiceUser);
@@ -1274,17 +1019,10 @@ io.on('connection', (socket) => {
       
       console.log(`✅ ${username} joined voice room. Total voice users: ${voiceRooms[roomId].length}`);
 
-      // Clean up stale users before proceeding
+      // Clean up stale users
       cleanupStaleVoiceUsers(roomId);
 
-      // Initialize monitoring for this user
-      monitorConnection(roomId, userId, {
-        connectionAttempts: (voiceConnectionStats[roomId]?.[userId]?.connectionAttempts || 0) + 1,
-        browser: userSession.browser,
-        joinedAt: new Date()
-      });
-
-      // ENHANCED: Send existing voice users to the new joiner immediately
+      // Send existing voice users to the new joiner
       const existingUsers = voiceRooms[roomId].filter(u => u.userId !== userId);
       
       console.log(`📡 Sending ${existingUsers.length} existing voice users to ${username}`);
@@ -1292,13 +1030,12 @@ io.on('connection', (socket) => {
         users: existingUsers.map(u => ({
           userId: u.userId,
           username: u.username,
-          webrtcSessionId: u.webrtcSessionId,
-          connectionState: u.connectionState
+          webrtcSessionId: u.webrtcSessionId
         })),
         webrtcConfig: webrtcConfig
       });
 
-      // ENHANCED: Notify other voice users about the new joiner with staggered timing for Chrome stability
+      // Notify other voice users about the new joiner with staggered timing
       setTimeout(() => {
         existingUsers.forEach((existingUser, index) => {
           const targetSocket = io.sockets.sockets.get(existingUser.socketId);
@@ -1320,21 +1057,20 @@ io.on('connection', (socket) => {
             voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== existingUser.userId);
           }
         });
-      }, 300); // Initial delay for stability
+      }, 300);
 
       // Update voice room status for all room users
       setTimeout(() => {
         io.to(roomId).emit('voice-room-updated', {
           voiceUsers: voiceRooms[roomId].map(u => ({
             userId: u.userId,
-            username: u.username,
-            connectionState: u.connectionState
+            username: u.username
           })),
           totalVoiceUsers: voiceRooms[roomId].length
         });
       }, 500);
 
-      // Send success confirmation to the joiner
+      // Send success confirmation
       socket.emit('voice-room-joined', {
         roomId,
         userId,
@@ -1350,7 +1086,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Enhanced leave voice room with comprehensive cleanup
+  // Leave voice room
   socket.on('leave-voice-room', ({ roomId, userId, reason }) => {
     try {
       console.log(`🎙️ User ${userId} leaving voice room ${roomId} (reason: ${reason || 'manual'})`);
@@ -1377,14 +1113,7 @@ io.on('connection', (socket) => {
         delete peerConnections[roomId][userId];
       }
 
-      // Update connection stats
-      monitorConnection(roomId, userId, {
-        leftAt: new Date(),
-        leaveReason: reason || 'manual',
-        connectionState: 'disconnected'
-      });
-
-      // Notify others in voice room with staggered timing
+      // Notify others in voice room
       const remainingUsers = voiceRooms[roomId];
       remainingUsers.forEach((user, index) => {
         const targetSocket = io.sockets.sockets.get(user.socketId);
@@ -1396,7 +1125,7 @@ io.on('connection', (socket) => {
               reason: reason || 'manual',
               timestamp: new Date().toISOString()
             });
-          }, index * 100); // Staggered notifications
+          }, index * 100);
         }
       });
 
@@ -1405,14 +1134,13 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('voice-room-updated', {
           voiceUsers: voiceRooms[roomId].map(u => ({
             userId: u.userId,
-            username: u.username,
-            connectionState: u.connectionState
+            username: u.username
           })),
           totalVoiceUsers: voiceRooms[roomId].length
         });
       }, 200);
 
-      // Send confirmation to the leaving user
+      // Send confirmation
       socket.emit('voice-room-left', {
         roomId,
         userId,
@@ -1425,13 +1153,6 @@ io.on('connection', (socket) => {
         delete voiceSignals[roomId];
         delete peerConnections[roomId];
         console.log(`🧹 Cleaned up empty voice room: ${roomId}`);
-        
-        // Keep connection stats for debugging for 5 minutes
-        setTimeout(() => {
-          if (voiceConnectionStats[roomId]) {
-            delete voiceConnectionStats[roomId];
-          }
-        }, 5 * 60 * 1000);
       }
 
     } catch (error) {
@@ -1440,96 +1161,63 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ENHANCED: Advanced WebRTC Signaling with Chrome optimizations and error recovery
+  // WebRTC Signaling - simplified
   socket.on('sending-signal', ({ userToCall, callerID, signal, roomId }) => {
     try {
-      console.log(`📞 Signal from ${callerID} to ${userToCall} in room ${roomId} (type: ${signal?.type}) [Size: ${JSON.stringify(signal).length} bytes]`);
+      console.log(`📞 Signal from ${callerID} to ${userToCall} in room ${roomId} (type: ${signal?.type})`);
       
-      // Validate signal data comprehensively
       if (!signal || typeof signal !== 'object') {
         console.error('❌ Invalid signal data received:', signal);
         socket.emit('voice-error', { 
           message: 'Invalid signal data',
-          targetUser: userToCall,
-          signalType: 'invalid'
+          targetUser: userToCall
         });
         return;
       }
 
-      // Clean up stale users before processing
+      // Clean up stale users
       cleanupStaleVoiceUsers(roomId);
       
-      // Find the target user's socket in voice room
+      // Find the target user
       const targetUser = voiceRooms[roomId]?.find(u => u.userId === userToCall);
       if (!targetUser) {
         console.log(`❌ Target user ${userToCall} not found in voice room`);
         socket.emit('voice-error', { 
           message: `User ${userToCall} not available for voice chat`,
-          targetUser: userToCall,
-          availableUsers: voiceRooms[roomId]?.map(u => u.userId) || []
+          targetUser: userToCall
         });
         return;
       }
 
       const targetSocket = io.sockets.sockets.get(targetUser.socketId);
       if (!targetSocket || !targetSocket.connected) {
-        console.log(`❌ Target socket not found or disconnected for user ${userToCall}`);
-        // Remove stale user from voice room
-        if (voiceRooms[roomId]) {
-          voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== userToCall);
-        }
+        console.log(`❌ Target socket not found for user ${userToCall}`);
+        voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== userToCall);
         socket.emit('voice-error', { 
           message: `User ${userToCall} is no longer available`,
-          targetUser: userToCall,
-          reason: 'socket_disconnected'
+          targetUser: userToCall
         });
         return;
       }
 
-      // Track signaling attempt
-      monitorConnection(roomId, callerID, {
-        connectionAttempts: (voiceConnectionStats[roomId]?.[callerID]?.connectionAttempts || 0) + 1,
-        signalExchanges: (voiceConnectionStats[roomId]?.[callerID]?.signalExchanges || 0) + 1,
-        lastSignalType: signal.type,
-        lastSignalTo: userToCall
-      });
-
-      // ENHANCED: Chrome-specific SDP optimizations
-      let optimizedSignal = { ...signal };
-      if (signal.sdp && (signal.type === 'offer' || signal.type === 'answer')) {
-        // Apply Chrome-specific audio optimizations
-        optimizedSignal.sdp = signal.sdp
-          // Prefer Opus codec with enhanced settings
-          .replace(/a=fmtp:111 .*/, 'a=fmtp:111 minptime=10;useinbandfec=1;maxaveragebitrate=128000')
-          // Enable stereo audio
-          .replace(/a=fmtp:111/, 'a=fmtp:111 stereo=1;sprop-stereo=1')
-          // Optimize for low latency
-          .replace(/a=maxptime:\d+/, 'a=maxptime:20')
-          .replace(/a=ptime:\d+/, 'a=ptime:20');
-        
-        console.log(`🔧 Applied Chrome SDP optimizations for ${signal.type} from ${callerID} to ${userToCall}`);
-      }
-
-      // Forward the enhanced signal
+      // Forward the signal
       const signalData = {
-        signal: optimizedSignal,
+        signal: signal,
         from: callerID,
         username: userSessions[socket.id]?.username || 'Unknown',
         roomId,
         timestamp: Date.now(),
-        webrtcSessionId: userSessions[socket.id]?.webrtcSessionId,
-        serverProcessingTime: Date.now()
+        webrtcSessionId: userSessions[socket.id]?.webrtcSessionId
       };
 
-      console.log(`📡 Forwarding optimized signal to ${targetUser.username} (${signal.type})`);
+      console.log(`📡 Forwarding signal to ${targetUser.username} (${signal.type})`);
       targetSocket.emit('user-calling', signalData);
 
-      // Send acknowledgment back to caller
+      // Send acknowledgment
       socket.emit('signal-sent', { 
         targetUser: userToCall,
         signalType: signal.type,
-        timestamp: Date.now(),
-        optimized: signal.sdp ? true : false
+        timestamp: Date.now()
       });
 
       // Store signal for debugging
@@ -1537,8 +1225,7 @@ io.on('connection', (socket) => {
       if (!voiceSignals[roomId][callerID]) voiceSignals[roomId][callerID] = {};
       voiceSignals[roomId][callerID][userToCall] = {
         lastSignal: signal.type,
-        timestamp: new Date(),
-        signalSize: JSON.stringify(signal).length
+        timestamp: new Date()
       };
 
     } catch (error) {
@@ -1553,99 +1240,60 @@ io.on('connection', (socket) => {
 
   socket.on('returning-signal', ({ signal, callerID, roomId }) => {
     try {
-      console.log(`📞 Return signal to ${callerID} in room ${roomId} (type: ${signal?.type}) [Size: ${JSON.stringify(signal).length} bytes]`);
+      console.log(`📞 Return signal to ${callerID} in room ${roomId} (type: ${signal?.type})`);
       
-      // Validate signal data
       if (!signal || typeof signal !== 'object') {
         console.error('❌ Invalid return signal data received:', signal);
         socket.emit('voice-error', { 
           message: 'Invalid return signal data',
-          callerID,
-          signalType: 'invalid'
+          callerID
         });
         return;
       }
       
-      // Clean up stale users first
+      // Clean up stale users
       cleanupStaleVoiceUsers(roomId);
       
-      // Find the caller's socket in voice room
+      // Find the caller
       const callerUser = voiceRooms[roomId]?.find(u => u.userId === callerID);
       if (!callerUser) {
         console.log(`❌ Caller ${callerID} not found in voice room`);
         socket.emit('voice-error', { 
           message: `Caller ${callerID} not found in voice room`,
-          callerID,
-          availableUsers: voiceRooms[roomId]?.map(u => u.userId) || []
+          callerID
         });
         return;
       }
 
       const callerSocket = io.sockets.sockets.get(callerUser.socketId);
       if (!callerSocket || !callerSocket.connected) {
-        console.log(`❌ Caller socket not found or disconnected for user ${callerID}`);
-        // Remove stale user from voice room
-        if (voiceRooms[roomId]) {
-          voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== callerID);
-        }
+        console.log(`❌ Caller socket not found for user ${callerID}`);
+        voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== callerID);
         socket.emit('voice-error', { 
           message: `Caller ${callerID} is no longer available`,
-          callerID,
-          reason: 'socket_disconnected'
+          callerID
         });
         return;
       }
 
-      // Track return signal
-      const currentUserId = userSessions[socket.id]?.userId;
-      monitorConnection(roomId, currentUserId, {
-        signalExchanges: (voiceConnectionStats[roomId]?.[currentUserId]?.signalExchanges || 0) + 1,
-        lastSignalType: signal.type,
-        lastSignalTo: callerID
-      });
-
-      // ENHANCED: Chrome-specific SDP optimizations for answer
-      let optimizedSignal = { ...signal };
-      if (signal.sdp && signal.type === 'answer') {
-        optimizedSignal.sdp = signal.sdp
-          // Apply same optimizations as offer
-          .replace(/a=fmtp:111 .*/, 'a=fmtp:111 minptime=10;useinbandfec=1;maxaveragebitrate=128000')
-          .replace(/a=fmtp:111/, 'a=fmtp:111 stereo=1;sprop-stereo=1')
-          .replace(/a=maxptime:\d+/, 'a=maxptime:20')
-          .replace(/a=ptime:\d+/, 'a=ptime:20');
-        
-        console.log(`🔧 Applied Chrome SDP optimizations for answer from ${currentUserId} to ${callerID}`);
-      }
-
-      // Forward the enhanced return signal
+      // Forward the return signal
       const returnSignalData = {
-        signal: optimizedSignal,
-        id: currentUserId,
+        signal: signal,
+        id: userSessions[socket.id]?.userId,
         username: userSessions[socket.id]?.username || 'Unknown',
         timestamp: Date.now(),
-        webrtcSessionId: userSessions[socket.id]?.webrtcSessionId,
-        serverProcessingTime: Date.now()
+        webrtcSessionId: userSessions[socket.id]?.webrtcSessionId
       };
 
-      console.log(`📡 Forwarding optimized return signal to ${callerUser.username} (${signal.type})`);
+      console.log(`📡 Forwarding return signal to ${callerUser.username} (${signal.type})`);
       callerSocket.emit('receiving-returned-signal', returnSignalData);
 
-      // Send acknowledgment back to answerer
+      // Send acknowledgment
       socket.emit('return-signal-sent', { 
         callerID,
         signalType: signal.type,
-        timestamp: Date.now(),
-        optimized: signal.sdp ? true : false
+        timestamp: Date.now()
       });
-
-      // Store return signal for debugging
-      if (!voiceSignals[roomId]) voiceSignals[roomId] = {};
-      if (!voiceSignals[roomId][currentUserId]) voiceSignals[roomId][currentUserId] = {};
-      voiceSignals[roomId][currentUserId][callerID] = {
-        lastReturnSignal: signal.type,
-        timestamp: new Date(),
-        signalSize: JSON.stringify(signal).length
-      };
 
     } catch (error) {
       console.error('Error handling returning signal:', error);
@@ -1657,271 +1305,9 @@ io.on('connection', (socket) => {
     }
   });
 
-  // NEW: Enhanced connection quality and status tracking
-  socket.on('voice-connection-status', ({ roomId, status, quality, targetUserId }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      console.log(`🔊 Voice connection status for ${userSession.username} -> ${targetUserId || 'all'}: ${status} (quality: ${quality})`);
-
-      // Update connection stats
-      monitorConnection(roomId, userSession.userId, {
-        connectionStatus: status,
-        connectionQuality: quality,
-        targetUser: targetUserId
-      });
-
-      // Update voice user connection state
-      if (voiceRooms[roomId]) {
-        const voiceUser = voiceRooms[roomId].find(u => u.userId === userSession.userId);
-        if (voiceUser) {
-          voiceUser.connectionState = status;
-        }
-      }
-
-      // Broadcast connection status to room moderators/owners for monitoring
-      const roomUsers = rooms[roomId] || [];
-      roomUsers.forEach(user => {
-        if (user.role === 'owner' || user.role === 'moderator') {
-          const targetSocket = io.sockets.sockets.get(user.id);
-          if (targetSocket) {
-            targetSocket.emit('voice-connection-update', {
-              userId: userSession.userId,
-              username: userSession.username,
-              status,
-              quality,
-              targetUserId,
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-      });
-
-      // If connection is established, update peer connections tracking
-      if (status === 'connected' && targetUserId) {
-        if (!peerConnections[roomId]) peerConnections[roomId] = {};
-        if (!peerConnections[roomId][userSession.userId]) peerConnections[roomId][userSession.userId] = {};
-        peerConnections[roomId][userSession.userId][targetUserId] = {
-          status,
-          quality,
-          establishedAt: new Date(),
-          lastUpdate: new Date()
-        };
-      }
-
-    } catch (error) {
-      console.error('Error handling voice connection status:', error);
-    }
-  });
-
-  // NEW: Enhanced ICE connection state handling with detailed monitoring
-  socket.on('ice-connection-state', ({ roomId, state, targetUserId }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      console.log(`🧊 ICE connection state for ${userSession.username} -> ${targetUserId}: ${state}`);
-
-      // Track ICE states for debugging and monitoring
-      monitorConnection(roomId, userSession.userId, {
-        iceConnectionState: state,
-        targetUser: targetUserId
-      });
-
-      // Store detailed ICE state information
-      if (voiceConnectionStats[roomId] && voiceConnectionStats[roomId][userSession.userId]) {
-        if (!voiceConnectionStats[roomId][userSession.userId].iceStates) {
-          voiceConnectionStats[roomId][userSession.userId].iceStates = {};
-        }
-        voiceConnectionStats[roomId][userSession.userId].iceStates[targetUserId] = {
-          state,
-          timestamp: new Date(),
-          stateHistory: voiceConnectionStats[roomId][userSession.userId].iceStates[targetUserId]?.stateHistory || []
-        };
-        
-        // Keep history of last 10 state changes
-        voiceConnectionStats[roomId][userSession.userId].iceStates[targetUserId].stateHistory.push({
-          state,
-          timestamp: new Date()
-        });
-        if (voiceConnectionStats[roomId][userSession.userId].iceStates[targetUserId].stateHistory.length > 10) {
-          voiceConnectionStats[roomId][userSession.userId].iceStates[targetUserId].stateHistory.shift();
-        }
-      }
-
-      // Handle connection success
-      if (state === 'connected') {
-        console.log(`✅ ICE connection established: ${userSession.username} <-> ${targetUserId}`);
-        monitorConnection(roomId, userSession.userId, {
-          successfulConnections: (voiceConnectionStats[roomId]?.[userSession.userId]?.successfulConnections || 0) + 1
-        });
-        
-        // Notify successful connection
-        socket.emit('peer-connection-established', {
-          targetUserId,
-          quality: 'good',
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      // Handle failed or disconnected connections with enhanced recovery
-      if (state === 'failed' || state === 'disconnected') {
-        console.log(`❌ ICE connection ${state} for ${userSession.username} -> ${targetUserId}`);
-        
-        monitorConnection(roomId, userSession.userId, {
-          failedConnections: (voiceConnectionStats[roomId]?.[userSession.userId]?.failedConnections || 0) + 1,
-          lastFailureReason: state
-        });
-        
-        // Notify both parties about connection issues
-        const targetUser = voiceRooms[roomId]?.find(u => u.userId === targetUserId);
-        if (targetUser) {
-          const targetSocket = io.sockets.sockets.get(targetUser.socketId);
-          if (targetSocket && targetSocket.connected) {
-            targetSocket.emit('peer-connection-failed', {
-              fromUserId: userSession.userId,
-              fromUsername: userSession.username,
-              reason: state,
-              timestamp: new Date().toISOString(),
-              retryRecommended: true
-            });
-          }
-        }
-        
-        socket.emit('peer-connection-failed', {
-          toUserId: targetUserId,
-          reason: state,
-          timestamp: new Date().toISOString(),
-          retryRecommended: true
-        });
-
-        // Clean up failed connection from peer tracking
-        if (peerConnections[roomId] && peerConnections[roomId][userSession.userId] && peerConnections[roomId][userSession.userId][targetUserId]) {
-          peerConnections[roomId][userSession.userId][targetUserId] = {
-            ...peerConnections[roomId][userSession.userId][targetUserId],
-            status: 'failed',
-            failedAt: new Date(),
-            failureReason: state
-          };
-        }
-      }
-
-      // Handle checking state (attempting connection)
-      if (state === 'checking') {
-        console.log(`🔄 ICE connection checking: ${userSession.username} -> ${targetUserId}`);
-        socket.emit('peer-connection-checking', {
-          targetUserId,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-    } catch (error) {
-      console.error('Error handling ICE connection state:', error);
-    }
-  });
-
-  // Enhanced speaking status updates with audio level monitoring
-  socket.on('speaking-status', ({ roomId, isSpeaking, audioLevel }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      // Update connection stats with speaking activity
-      monitorConnection(roomId, userSession.userId, {
-        lastSpeaking: isSpeaking ? new Date() : voiceConnectionStats[roomId]?.[userSession.userId]?.lastSpeaking,
-        currentlySpeaking: isSpeaking,
-        audioLevel: audioLevel || 0
-      });
-
-      // Broadcast speaking status to all room users (not just voice users)
-      socket.to(roomId).emit('user-speaking-update', {
-        userId: userSession.userId,
-        username: userSession.username,
-        isSpeaking,
-        audioLevel: audioLevel || 0,
-        timestamp: new Date().toISOString()
-      });
-
-      console.log(`🗣️ ${userSession.username} speaking status: ${isSpeaking} (level: ${audioLevel || 0})`);
-
-    } catch (error) {
-      console.error('Error handling speaking status:', error);
-    }
-  });
-
-  // NEW: Audio quality reporting and optimization
-  socket.on('audio-quality-report', ({ roomId, report }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      console.log(`📊 Audio quality report from ${userSession.username}:`, report);
-
-      // Store detailed audio quality metrics
-      monitorConnection(roomId, userSession.userId, {
-        audioQuality: report,
-        lastQualityReport: new Date()
-      });
-
-      // If quality is poor, suggest optimizations
-      if (report.overall === 'poor' || report.overall === 'fair') {
-        socket.emit('audio-optimization-suggestion', {
-          suggestions: [
-            'Check your microphone connection',
-            'Reduce background noise',
-            'Move closer to your router',
-            'Close other applications using bandwidth',
-            'Try using a wired connection'
-          ],
-          currentQuality: report.overall,
-          timestamp: new Date().toISOString()
-        });
-      }
-
-    } catch (error) {
-      console.error('Error handling audio quality report:', error);
-    }
-  });
-
-  // NEW: WebRTC statistics reporting
-  socket.on('webrtc-stats', ({ roomId, stats, targetUserId }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      // Store comprehensive WebRTC statistics
-      if (!voiceConnectionStats[roomId]) voiceConnectionStats[roomId] = {};
-      if (!voiceConnectionStats[roomId][userSession.userId]) voiceConnectionStats[roomId][userSession.userId] = {};
-      if (!voiceConnectionStats[roomId][userSession.userId].webrtcStats) {
-        voiceConnectionStats[roomId][userSession.userId].webrtcStats = {};
-      }
-
-      voiceConnectionStats[roomId][userSession.userId].webrtcStats[targetUserId] = {
-        ...stats,
-        timestamp: new Date(),
-        reportedBy: userSession.userId
-      };
-
-      // Log significant connection issues
-      if (stats.packetsLost && stats.packetsLost > 10) {
-        console.log(`⚠️ High packet loss detected: ${userSession.username} -> ${targetUserId} (${stats.packetsLost} packets)`);
-      }
-      
-      if (stats.roundTripTime && stats.roundTripTime > 200) {
-        console.log(`⚠️ High latency detected: ${userSession.username} -> ${targetUserId} (${stats.roundTripTime}ms RTT)`);
-      }
-
-    } catch (error) {
-      console.error('Error handling WebRTC stats:', error);
-    }
-  });
-
-  // =============================================================================
-  // ENHANCED DISCONNECT HANDLING WITH COMPREHENSIVE VOICE CHAT CLEANUP
-  // =============================================================================
+  // Disconnect handling
   socket.on('disconnect', (reason) => {
-    console.log(`🔌 User disconnected: ${socket.username || 'Unknown'} (${socket.id}) [WebRTC: ${socket.webrtcSessionId}] - Reason: ${reason}`);
+    console.log(`🔌 User disconnected: ${socket.username || 'Unknown'} (${socket.id}) - Reason: ${reason}`);
     
     const userSession = userSessions[socket.id];
     if (userSession && userSession.roomId) {
@@ -1933,7 +1319,7 @@ io.on('connection', (socket) => {
         const userId = rooms[roomId][userIndex].userId;
         rooms[roomId].splice(userIndex, 1);
         
-        // ENHANCED: Comprehensive voice room cleanup on disconnect
+        // Voice room cleanup
         if (voiceRooms[roomId]) {
           const voiceUserIndex = voiceRooms[roomId].findIndex(u => u.socketId === socket.id);
           if (voiceUserIndex !== -1) {
@@ -1942,19 +1328,12 @@ io.on('connection', (socket) => {
             
             console.log(`🎙️ ${leavingVoiceUser.username} removed from voice room on disconnect`);
             
-            // Clean up all peer connections for this user
+            // Clean up peer connections
             if (peerConnections[roomId] && peerConnections[roomId][leavingVoiceUser.userId]) {
               delete peerConnections[roomId][leavingVoiceUser.userId];
             }
             
-            // Clean up peer connections where this user was the target
-            Object.keys(peerConnections[roomId] || {}).forEach(otherUserId => {
-              if (peerConnections[roomId][otherUserId] && peerConnections[roomId][otherUserId][leavingVoiceUser.userId]) {
-                delete peerConnections[roomId][otherUserId][leavingVoiceUser.userId];
-              }
-            });
-            
-            // Notify remaining voice users with staggered timing for stability
+            // Notify remaining voice users
             const remainingVoiceUsers = voiceRooms[roomId];
             remainingVoiceUsers.forEach((voiceUser, index) => {
               const targetSocket = io.sockets.sockets.get(voiceUser.socketId);
@@ -1966,7 +1345,7 @@ io.on('connection', (socket) => {
                     reason: 'disconnected',
                     timestamp: new Date().toISOString()
                   });
-                }, index * 75); // Stagger notifications for stability
+                }, index * 75);
               }
             });
 
@@ -1975,21 +1354,11 @@ io.on('connection', (socket) => {
               io.to(roomId).emit('voice-room-updated', {
                 voiceUsers: voiceRooms[roomId].map(u => ({
                   userId: u.userId,
-                  username: u.username,
-                  connectionState: u.connectionState
+                  username: u.username
                 })),
                 totalVoiceUsers: voiceRooms[roomId].length
               });
             }, 300);
-
-            // Update connection stats with disconnect information
-            monitorConnection(roomId, leavingVoiceUser.userId, {
-              disconnectedAt: new Date(),
-              disconnectReason: reason,
-              connectionState: 'disconnected',
-              totalSessionTime: voiceConnectionStats[roomId]?.[leavingVoiceUser.userId]?.joinedAt ? 
-                Date.now() - new Date(voiceConnectionStats[roomId][leavingVoiceUser.userId].joinedAt).getTime() : 0
-            });
 
             // Clean up empty voice room
             if (voiceRooms[roomId].length === 0) {
@@ -1997,21 +1366,13 @@ io.on('connection', (socket) => {
               delete voiceSignals[roomId];
               delete peerConnections[roomId];
               console.log(`🧹 Cleaned up empty voice room: ${roomId}`);
-              
-              // Keep connection stats for debugging for 10 minutes, then clean up
-              setTimeout(() => {
-                if (voiceConnectionStats[roomId]) {
-                  console.log(`🧹 Cleaning up connection stats for room: ${roomId}`);
-                  delete voiceConnectionStats[roomId];
-                }
-              }, 10 * 60 * 1000);
             }
           }
         }
         
         console.log(`❌ ${username} left room ${roomId}`);
 
-        // Send leave message to remaining users
+        // Send leave message
         const leaveMessage = {
           id: Date.now(),
           sender: 'System',
@@ -2028,63 +1389,20 @@ io.on('connection', (socket) => {
     
     delete userSessions[socket.id];
     
-    // Schedule cleanup with delay to allow for proper disconnect handling
+    // Schedule cleanup
     setTimeout(cleanupEmptyRooms, 5000);
-  });
-
-  // NEW: Handle explicit voice connection errors with retry logic
-  socket.on('voice-connection-error', ({ roomId, error, targetUserId }) => {
-    try {
-      const userSession = userSessions[socket.id];
-      if (!userSession || userSession.roomId !== roomId) return;
-
-      console.log(`❌ Voice connection error from ${userSession.username} to ${targetUserId}: ${error}`);
-
-      // Track the error
-      monitorConnection(roomId, userSession.userId, {
-        lastError: error,
-        lastErrorTime: new Date(),
-        errorCount: (voiceConnectionStats[roomId]?.[userSession.userId]?.errorCount || 0) + 1
-      });
-
-      // Suggest retry if error count is low
-      const errorCount = voiceConnectionStats[roomId]?.[userSession.userId]?.errorCount || 0;
-      if (errorCount < 3) {
-        setTimeout(() => {
-          socket.emit('retry-voice-connection', {
-            targetUserId,
-            retryCount: errorCount + 1,
-            delayMs: (errorCount + 1) * 2000 // Exponential backoff
-          });
-        }, (errorCount + 1) * 2000);
-      } else {
-        socket.emit('voice-connection-failed-permanently', {
-          targetUserId,
-          reason: 'max_retries_exceeded',
-          suggestions: [
-            'Check your internet connection',
-            'Try refreshing the page',
-            'Contact support if the issue persists'
-          ]
-        });
-      }
-
-    } catch (error) {
-      console.error('Error handling voice connection error:', error);
-    }
   });
 });
 
 // =============================================================================
-// ENHANCED ERROR HANDLING WITH WEBRTC CONSIDERATIONS
+// ERROR HANDLING
 // =============================================================================
 app.use((error, req, res, next) => {
   console.error('Express error:', error);
   res.status(500).json({ 
     error: 'Internal server error',
     message: NODE_ENV === 'development' ? error.message : 'Something went wrong',
-    timestamp: new Date().toISOString(),
-    requestId: req.headers['x-request-id'] || 'unknown'
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -2099,33 +1417,22 @@ app.use('*', (req, res) => {
       'GET /api/health',
       'GET /api/voice-rooms/status',
       'GET /api/webrtc/config',
-      'GET /api/webrtc/debug/:roomId',
       'POST /api/auth/login',
       'POST /api/auth/signup',
       'POST /api/auth/verify',
       'POST /api/rooms/create',
       'GET /api/room/:roomId'
-    ],
-    cors: {
-      enabled: true,
-      frontendUrl: FRONTEND_URL
-    },
-    webrtc: {
-      version: '2.0.0',
-      voiceRooms: Object.keys(voiceRooms).length,
-      totalVoiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-      activePeerConnections: Object.values(peerConnections).reduce((sum, room) => Object.keys(room).length + sum, 0)
-    }
+    ]
   });
 });
 
 // =============================================================================
-// ENHANCED GRACEFUL SHUTDOWN WITH COMPREHENSIVE VOICE CHAT CLEANUP
+// GRACEFUL SHUTDOWN
 // =============================================================================
 const gracefulShutdown = (signal) => {
   console.log(`🛑 Received ${signal}. Starting graceful shutdown...`);
   
-  // Enhanced voice chat shutdown notification
+  // Notify voice users
   Object.keys(voiceRooms).forEach(roomId => {
     const voiceUsers = voiceRooms[roomId];
     console.log(`📢 Notifying ${voiceUsers.length} voice users in room ${roomId} about shutdown`);
@@ -2133,12 +1440,11 @@ const gracefulShutdown = (signal) => {
     io.to(roomId).emit('voice-chat-shutdown', {
       message: 'Voice chat will be temporarily unavailable during server maintenance.',
       estimatedDowntime: '2-5 minutes',
-      timestamp: new Date().toISOString(),
-      reconnectInstructions: 'Please rejoin the voice chat after the server restarts.'
+      timestamp: new Date().toISOString()
     });
   });
   
-  // Notify all connected users
+  // Notify all users
   io.emit('serverShutdown', {
     message: 'Server is shutting down for maintenance. Please reconnect in a few minutes.',
     timestamp: new Date().toISOString(),
@@ -2151,13 +1457,9 @@ const gracefulShutdown = (signal) => {
   console.log(`   Active Users: ${Object.keys(userSessions).length}`);
   console.log(`   Voice Rooms: ${Object.keys(voiceRooms).length}`);
   console.log(`   Voice Users: ${Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0)}`);
-  console.log(`   Peer Connections: ${Object.values(peerConnections).reduce((sum, room) => Object.keys(room).length + sum, 0)}`);
   
   server.close(() => {
     console.log('✅ HTTP server closed');
-    console.log('🎯 All connections closed');
-    console.log('🎙️ Voice rooms cleaned up');
-    console.log('📊 Connection statistics preserved');
     process.exit(0);
   });
 
@@ -2184,98 +1486,37 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // =============================================================================
-// START ENHANCED SERVER WITH COMPREHENSIVE LOGGING
+// START SERVER
 // =============================================================================
 server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('🎉 ================================================================');
-  console.log('🚀 COTOG Backend with ENHANCED WebRTC v2.0 Ready!');
+  console.log('🚀 COTOG Backend - Cleaned Version Ready!');
   console.log('🎉 ================================================================');
   console.log('');
   console.log(`📡 Server URL: http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
-  console.log(`🔐 JWT Secret: ${JWT_SECRET.substring(0, 10)}...`);
   console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
   console.log(`💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`);
   console.log('');
-  console.log('📋 Available Demo Accounts:');
+  console.log('📋 Demo Accounts:');
   console.log('   👤 john.doe@example.com (User)');
   console.log('   👑 sarah.wilson@example.com (Admin)');
   console.log('   🛡️ alex.kim@example.com (Moderator)');
-  console.log('   🔑 Password for all: password123');
+  console.log('   🔑 Password: password123');
   console.log('');
-  console.log('🔧 Enhanced API Endpoints:');
-  console.log('   📊 GET  /health - Comprehensive health check');
-  console.log('   🎙️ GET  /api/voice-rooms/status - Real-time voice monitoring');
-  console.log('   ⚙️ GET  /api/webrtc/config - WebRTC configuration');
-  console.log('   🐛 GET  /api/webrtc/debug/:roomId - Detailed debugging');
-  console.log('   🔐 POST /api/auth/* - Authentication endpoints');
-  console.log('   🏠 POST /api/rooms/create - Create room with WebRTC');
-  console.log('   📡 Socket.IO: Real-time collaboration + Advanced WebRTC');
+  console.log('🎙️ Simplified WebRTC Features:');
+  console.log('   ✅ No permissions required - instant access');
+  console.log('   ✅ Simplified peer discovery');
+  console.log('   ✅ Basic connection monitoring');
+  console.log('   ✅ Automatic cleanup');
+  console.log('   ✅ Enhanced error handling');
   console.log('');
-  console.log('🎙️ Advanced WebRTC Voice Chat Features v2.0:');
-  console.log('   ✅ Chrome-optimized SDP processing');
-  console.log('   ✅ Enhanced peer discovery with staggered connections');
-  console.log('   ✅ Advanced connection monitoring and quality tracking');
-  console.log('   ✅ Automatic stale user cleanup with detailed logging');
-  console.log('   ✅ Comprehensive error handling and retry logic');
-  console.log('   ✅ Real-time audio quality optimization');
-  console.log('   ✅ ICE connection state monitoring');
-  console.log('   ✅ WebRTC statistics collection and analysis');
-  console.log('   ✅ Enhanced speaking detection with audio levels');
-  console.log('   ✅ Graceful disconnect handling with cleanup');
-  console.log('');
-  console.log('🌐 CORS & Security Configuration:');
-  console.log(`   ✅ Frontend: ${FRONTEND_URL}`);
-  console.log('   ✅ Credentials: enabled');
-  console.log('   ✅ WebRTC headers: included');
-  console.log('   ✅ Multi-origin support: enabled');
-  console.log('   ✅ Security headers: comprehensive');
-  console.log('');
-  console.log('🔧 WebRTC Technical Improvements v2.0:');
-  console.log('   ✅ Multiple STUN servers for better connectivity');
-  console.log('   ✅ Chrome-specific audio codec optimizations');
-  console.log('   ✅ Enhanced SDP processing with quality improvements');
-  console.log('   ✅ Staggered peer connection establishment (150ms intervals)');
-  console.log('   ✅ Comprehensive connection state monitoring');
-  console.log('   ✅ Advanced peer connection tracking and cleanup');
-  console.log('   ✅ Real-time quality metrics and optimization suggestions');
-  console.log('   ✅ Exponential backoff retry logic for failed connections');
-  console.log('   ✅ Binary support for WebRTC data channels');
-  console.log('   ✅ Enhanced audio constraints for better quality');
-  console.log('');
-  console.log('📊 System Monitoring:');
-  console.log('   ✅ Voice room status endpoint with detailed metrics');
-  console.log('   ✅ WebRTC debug endpoint for troubleshooting');
-  console.log('   ✅ Connection quality tracking and reporting');
-  console.log('   ✅ ICE connection state history');
-  console.log('   ✅ Audio quality metrics and optimization');
-  console.log('   ✅ Comprehensive error logging and statistics');
-  console.log('');
-  console.log('🛡️ Reliability & Performance:');
-  console.log('   ✅ Graceful shutdown with user notifications');
-  console.log('   ✅ Memory usage monitoring and optimization');
-  console.log('   ✅ Automatic cleanup of stale connections');
-  console.log('   ✅ Connection statistics preservation for debugging');
-  console.log('   ✅ Enhanced error recovery mechanisms');
-  console.log('   ✅ Performance metrics collection');
-  console.log('');
-  console.log('🎯 Chrome-Specific Optimizations:');
-  console.log('   ✅ Enhanced Opus codec settings for better audio');
-  console.log('   ✅ Optimized ICE candidate handling');
-  console.log('   ✅ Chrome User-Agent detection and optimization');
-  console.log('   ✅ Browser-specific connection strategies');
-  console.log('   ✅ Enhanced error handling for Chrome WebRTC quirks');
-  console.log('');
-  console.log('✅ Enhanced WebRTC backend v2.0 ready for production!');
-  console.log('🎙️ Voice chat optimized for reliability and quality!');
-  console.log('🚀 All systems operational and monitoring enabled!');
+  console.log('✅ Cleaned backend ready - unused code removed!');
+  console.log('🎙️ Voice chat simplified for better performance!');
   console.log('');
 });
 
-// =============================================================================
-// EXPORT FOR TESTING AND EXTERNAL USE
-// =============================================================================
 module.exports = { 
   app, 
   server, 
@@ -2284,8 +1525,6 @@ module.exports = {
   rooms, 
   roomsData, 
   voiceRooms, 
-  voiceConnectionStats,
-  peerConnections,
   webrtcConfig,
   iceServers
 };
