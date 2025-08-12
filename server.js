@@ -1,4 +1,4 @@
-// server.js - COMPLETE UPDATED VERSION WITH WEBRTC FIXES
+// server.js - SIMPLIFIED ROLE SYSTEM VERSION
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -130,7 +130,7 @@ app.use((req, res, next) => {
 // DATA STORES
 // =============================================================================
 
-// Demo users with pre-hashed passwords
+// Demo users with pre-hashed passwords - SIMPLIFIED: All users have 'user' role
 const hashedPassword = '$2b$10$8K1p/a0dW22FKWVvfvkOKuWm2F5F0vQw1Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5';
 
 const users = [
@@ -142,7 +142,7 @@ const users = [
     firstName: 'John',
     lastName: 'Doe',
     avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff',
-    role: 'user',
+    role: 'user', // SIMPLIFIED: Only 'user' role
     createdAt: new Date('2024-01-15T10:30:00Z'),
     lastLogin: new Date(),
     isActive: true,
@@ -156,7 +156,7 @@ const users = [
     firstName: 'Sarah',
     lastName: 'Wilson',
     avatar: 'https://ui-avatars.com/api/?name=Sarah+Wilson&background=FF6B6B&color=fff',
-    role: 'admin',
+    role: 'user', // SIMPLIFIED: Changed from 'admin' to 'user'
     createdAt: new Date('2024-01-20T09:15:00Z'),
     lastLogin: new Date(),
     isActive: true,
@@ -170,7 +170,7 @@ const users = [
     firstName: 'Alex',
     lastName: 'Kim',
     avatar: 'https://ui-avatars.com/api/?name=Alex+Kim&background=96CEB4&color=fff',
-    role: 'moderator',
+    role: 'user', // SIMPLIFIED: Changed from 'moderator' to 'user'
     createdAt: new Date('2024-02-15T08:30:00Z'),
     lastLogin: new Date(),
     isActive: true,
@@ -178,13 +178,13 @@ const users = [
   }
 ];
 
-// Room management
-const rooms = {}; // { roomId: [ { id, username, userId, joinedAt, role } ] }
+// Room management - SIMPLIFIED ROLES
+const rooms = {}; // { roomId: [ { id, username, userId, joinedAt, roomRole } ] }
 const roomsData = {}; // Room metadata
 const messageHistory = {}; // Chat history
 const userSessions = {}; // Socket sessions
 
-// ENHANCED WEBRTC VOICE CHAT SYSTEM
+// WebRTC voice chat system
 const voiceRooms = {}; // { roomId: [ { userId, username, socketId, joinedAt } ] }
 const activePeers = {}; // { roomId: { userId: [connectedUserIds] } }
 
@@ -206,7 +206,7 @@ const webrtcConfig = {
 };
 
 // =============================================================================
-// USER SERVICE
+// USER SERVICE - SIMPLIFIED ROLE SYSTEM
 // =============================================================================
 const userService = {
   findByEmail: (email) => users.find(user => user.email.toLowerCase() === email.toLowerCase()),
@@ -235,6 +235,7 @@ const userService = {
     }
   },
 
+  // SIMPLIFIED: Only creates 'user' role
   createUser: async (userData) => {
     const { username, email, password, firstName, lastName } = userData;
     
@@ -252,7 +253,7 @@ const userService = {
       firstName,
       lastName,
       avatar: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=${Math.floor(Math.random()*16777215).toString(16)}&color=fff`,
-      role: 'user',
+      role: 'user', // SIMPLIFIED: Only 'user' role
       createdAt: new Date(),
       lastLogin: null,
       isActive: true,
@@ -269,12 +270,11 @@ const userService = {
     if (user) user.lastLogin = new Date();
   },
 
+  // SIMPLIFIED: getUserStats removed admin/moderator counts
   getUserStats: () => ({
     totalUsers: users.length,
     activeUsers: users.filter(u => u.isActive).length,
-    adminUsers: users.filter(u => u.role === 'admin').length,
-    moderatorUsers: users.filter(u => u.role === 'moderator').length,
-    regularUsers: users.filter(u => u.role === 'user').length
+    regularUsers: users.filter(u => u.role === 'user').length // Only regular users now
   })
 };
 
@@ -319,7 +319,7 @@ const authenticateSocket = (socket, next) => {
 
     socket.userId = user.id;
     socket.username = user.username;
-    socket.userRole = user.role;
+    socket.userRole = user.role; // Always 'user' now
     socket.webrtcSessionId = `${user.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     next();
   });
@@ -343,21 +343,6 @@ const cleanupEmptyRooms = () => {
   }
 };
 
-// Helper function to generate connection matrix for voice chat
-function generateConnectionMatrix(voiceUsers, peerConnections) {
-  const matrix = {};
-  
-  voiceUsers.forEach(user => {
-    matrix[user.userId] = {
-      username: user.username,
-      connectedTo: peerConnections[user.userId] || [],
-      totalConnections: (peerConnections[user.userId] || []).length
-    };
-  });
-  
-  return matrix;
-}
-
 // =============================================================================
 // API ROUTES
 // =============================================================================
@@ -365,11 +350,17 @@ function generateConnectionMatrix(voiceUsers, peerConnections) {
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'COTOG Backend API - Enhanced WebRTC Voice Chat',
+    message: 'COTOG Backend API - Simplified Role System',
     status: 'running',
-    version: '4.0.0',
+    version: '5.0.0',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
+    roleSystem: {
+      simplified: true,
+      description: 'Only user role + room creator privileges',
+      userRole: 'Standard user - can join rooms, edit code, chat, voice',
+      roomCreator: 'Room owner - has language control and room management'
+    },
     endpoints: {
       health: '/health',
       apiHealth: '/api/health',
@@ -381,22 +372,10 @@ app.get('/', (req, res) => {
     },
     features: {
       websocket: 'Socket.IO v4 enabled',
-      webrtc: 'Enhanced P2P voice chat with conflict resolution',
+      webrtc: 'Enhanced P2P voice chat',
       cors: 'Multi-origin enabled',
-      signaling: 'Enhanced WebRTC signaling with improved timing',
-      voiceFeatures: [
-        'Enhanced multi-user voice rooms',
-        'Conflict resolution system',
-        'Improved connection management',
-        'Better timing and delays',
-        'Enhanced error recovery',
-        'Real-time monitoring'
-      ]
-    },
-    voiceStats: {
-      activeVoiceRooms: Object.keys(voiceRooms).length,
-      totalVoiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-      activePeerConnections: Object.values(activePeers).reduce((sum, room) => Object.keys(room).length + sum, 0)
+      signaling: 'Enhanced WebRTC signaling',
+      roleSystem: 'Simplified - no admin/moderator layers'
     }
   });
 });
@@ -412,7 +391,7 @@ app.get('/health', (req, res) => {
     uptime: uptime,
     uptimeFormatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`,
     environment: NODE_ENV,
-    version: '4.0.0',
+    version: '5.0.0 - Simplified Roles',
     memory: {
       rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
@@ -427,159 +406,15 @@ app.get('/health', (req, res) => {
     frontendUrl: FRONTEND_URL,
     corsEnabled: true,
     webrtcEnabled: true,
-    enhancedFeatures: {
-      conflictResolution: true,
-      improvedTiming: true,
-      enhancedCleanup: true,
-      betterErrorHandling: true
-    }
+    roleSystemSimplified: true
   });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    service: 'COTOG Backend - Enhanced WebRTC Voice Chat',
-    timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()),
-    environment: NODE_ENV,
-    rooms: Object.keys(roomsData).length,
-    users: Object.keys(userSessions).length,
-    voiceConnections: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-    corsConfig: {
-      frontendUrl: FRONTEND_URL,
-      allowCredentials: true,
-      methods: corsOptions.methods,
-      allowedHeaders: corsOptions.allowedHeaders
-    },
-    webrtcConfig: {
-      iceServers: iceServers.length,
-      voiceRoomsActive: Object.keys(voiceRooms).length,
-      peerConnectionsActive: Object.values(activePeers).reduce((sum, room) => Object.keys(room).length + sum, 0),
-      enhancedFeatures: true
-    }
-  });
-});
-
-// Voice chat status endpoint
-app.get('/api/voice-chat/status', authenticateToken, (req, res) => {
-  try {
-    const voiceStats = {
-      totalVoiceRooms: Object.keys(voiceRooms).length,
-      totalVoiceUsers: Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0),
-      totalActivePeers: Object.values(activePeers).reduce((sum, room) => {
-        return sum + Object.values(room).reduce((peerSum, peers) => peerSum + peers.length, 0);
-      }, 0),
-      roomDetails: Object.entries(voiceRooms).map(([roomId, users]) => ({
-        roomId,
-        userCount: users.length,
-        users: users.map(u => ({
-          userId: u.userId,
-          username: u.username,
-          joinedAt: u.joinedAt
-        })),
-        peerConnections: Object.keys(activePeers[roomId] || {}).length
-      })),
-      systemHealth: {
-        memoryUsage: process.memoryUsage(),
-        uptime: process.uptime(),
-        activeSockets: io.sockets.sockets.size
-      },
-      enhancements: {
-        conflictResolution: true,
-        improvedTiming: true,
-        enhancedErrorHandling: true,
-        betterCleanup: true
-      }
-    };
-    
-    res.json(voiceStats);
-  } catch (error) {
-    console.error('Voice chat status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// WebRTC configuration endpoint
-app.get('/api/webrtc/config', authenticateToken, (req, res) => {
-  try {
-    res.json({
-      iceServers,
-      configuration: webrtcConfig,
-      features: {
-        audioOnly: true,
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        multiUserSupport: true,
-        conflictResolution: true,
-        enhancedTiming: true,
-        improvedCleanup: true,
-        betterErrorHandling: true
-      },
-      serverInfo: {
-        version: '4.0.0',
-        environment: NODE_ENV,
-        timestamp: new Date().toISOString(),
-        enhancements: 'Connection conflicts resolved, timing optimized'
-      }
-    });
-  } catch (error) {
-    console.error('WebRTC config error:', error);
-    res.status(500).json({ error: 'Failed to get WebRTC configuration' });
-  }
-});
-
-// Specific room voice status
-app.get('/api/room/:roomId/voice-status', authenticateToken, (req, res) => {
-  try {
-    const { roomId } = req.params;
-    
-    if (!roomsData[roomId]) {
-      return res.status(404).json({ error: 'Room not found' });
-    }
-    
-    const voiceUsers = voiceRooms[roomId] || [];
-    const peerConnections = activePeers[roomId] || {};
-    
-    res.json({
-      roomId,
-      roomName: roomsData[roomId].roomName,
-      voiceChat: {
-        enabled: true,
-        enhanced: true,
-        totalUsers: voiceUsers.length,
-        users: voiceUsers.map(u => ({
-          userId: u.userId,
-          username: u.username,
-          joinedAt: u.joinedAt,
-          connected: true
-        })),
-        peerConnections: Object.entries(peerConnections).map(([userId, peers]) => ({
-          userId,
-          connectedTo: peers
-        })),
-        connectionMatrix: generateConnectionMatrix(voiceUsers, peerConnections),
-        features: {
-          conflictResolution: true,
-          enhancedTiming: true,
-          improvedErrorHandling: true
-        }
-      },
-      serverTimestamp: new Date().toISOString()
-    });
-    
-  } catch (error) {
-    console.error('Room voice status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Authentication routes
+// Authentication routes (unchanged)
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
-    console.log(`🔍 Login attempt for: ${email} from origin: ${req.headers.origin}`);
+    console.log(`🔍 Login attempt for: ${email}`);
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -616,97 +451,13 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-app.post('/api/auth/signup', async (req, res) => {
-  try {
-    const { username, email, password, confirmPassword, firstName, lastName } = req.body;
-    console.log(`📝 Signup attempt for: ${email} from origin: ${req.headers.origin}`);
-
-    if (!username || !email || !password || !firstName || !lastName) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ error: 'Passwords do not match' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-
-    const user = await userService.createUser({
-      username, email, password, firstName, lastName
-    });
-
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    console.log(`✅ User created: ${email}`);
-
-    res.status(201).json({
-      success: true,
-      message: 'Account created successfully',
-      user,
-      token
-    });
-
-  } catch (error) {
-    console.error('Signup error:', error);
-    
-    if (error.message === 'User already exists') {
-      return res.status(409).json({ error: 'Email or username already exists' });
-    }
-    
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.post('/api/auth/verify', async (req, res) => {
-  try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({ error: 'Token is required' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = userService.findById(decoded.userId);
-    
-    if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-
-    const { password, ...userWithoutPassword } = user;
-    
-    res.json({
-      success: true,
-      user: userWithoutPassword
-    });
-
-  } catch (error) {
-    console.error('Token verification error:', error);
-    
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ error: 'Token expired' });
-    }
-    
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Room management routes
+// Room creation (simplified - no admin checks)
 app.post('/api/rooms/create', authenticateToken, (req, res) => {
   try {
     const { roomName, password, maxUsers, isPrivate, description } = req.body;
     const userId = req.user.userId;
     
-    console.log(`🏠 Room creation attempt by user ${userId} from origin: ${req.headers.origin}`);
+    console.log(`🏠 Room creation attempt by user ${userId}`);
     
     if (!roomName || !password) {
       return res.status(400).json({ error: 'Room name and password are required' });
@@ -756,7 +507,7 @@ app.post('/api/rooms/create', authenticateToken, (req, res) => {
         description: roomsData[roomId].description,
         currentLanguage: roomsData[roomId].currentLanguage,
         webrtcEnabled: true,
-        enhancedFeatures: true
+        simplifiedRoles: true
       }
     });
 
@@ -788,7 +539,7 @@ app.get('/api/room/:roomId', (req, res) => {
       voiceUsers: voiceRooms[roomId]?.length || 0,
       webrtcEnabled: true,
       webrtcConfig: webrtcConfig,
-      enhancedFeatures: true
+      simplifiedRoles: true
     });
 
   } catch (error) {
@@ -798,24 +549,24 @@ app.get('/api/room/:roomId', (req, res) => {
 });
 
 // =============================================================================
-// SOCKET.IO CONNECTION HANDLING WITH ENHANCED WEBRTC VOICE CHAT
+// SOCKET.IO CONNECTION HANDLING - SIMPLIFIED ROLE SYSTEM
 // =============================================================================
 io.use(authenticateSocket);
 
 io.on('connection', (socket) => {
-  console.log(`🔌 User connected: ${socket.username} (${socket.id}) [WebRTC: ${socket.webrtcSessionId}] from ${socket.handshake.headers.origin}`);
+  console.log(`🔌 User connected: ${socket.username} (${socket.id}) from ${socket.handshake.headers.origin}`);
 
   userSessions[socket.id] = {
     userId: socket.userId,
     username: socket.username,
-    userRole: socket.userRole,
+    userRole: socket.userRole, // Always 'user' now
     roomId: null,
     connectedAt: new Date(),
     webrtcSessionId: socket.webrtcSessionId,
     browser: socket.handshake.headers['user-agent']?.includes('Chrome') ? 'Chrome' : 'Other'
   };
 
-  // Join room
+  // Join room - SIMPLIFIED ROLE LOGIC
   socket.on('joinRoom', ({ roomId, roomPassword }) => {
     try {
       console.log(`🚪 User ${socket.username} attempting to join room ${roomId}`);
@@ -847,11 +598,10 @@ io.on('connection', (socket) => {
       socket.join(roomId);
       userSessions[socket.id].roomId = roomId;
       
-      let userRole = 'member';
+      // SIMPLIFIED: Only 'owner' (room creator) or 'member' roles
+      let roomRole = 'member';
       if (room.createdBy === socket.userId) {
-        userRole = 'owner';
-      } else if (socket.userRole === 'admin') {
-        userRole = 'moderator';
+        roomRole = 'owner'; // Room creator gets owner privileges
       }
       
       if (!rooms[roomId]) rooms[roomId] = [];
@@ -860,11 +610,11 @@ io.on('connection', (socket) => {
         userId: socket.userId,
         username: socket.username,
         joinedAt: new Date(),
-        role: userRole,
+        roomRole: roomRole, // SIMPLIFIED: 'owner' or 'member'
         webrtcSessionId: socket.webrtcSessionId
       });
 
-      console.log(`📥 ${socket.username} joined room ${roomId} as ${userRole}`);
+      console.log(`📥 ${socket.username} joined room ${roomId} as ${roomRole}`);
 
       if (messageHistory[roomId]) {
         socket.emit('chatHistory', messageHistory[roomId]);
@@ -882,7 +632,7 @@ io.on('connection', (socket) => {
       socket.emit('joinSuccess', {
         roomId,
         username: socket.username,
-        userRole,
+        userRole: roomRole, // Send simplified role
         webrtcSessionId: socket.webrtcSessionId,
         roomInfo: {
           roomName: room.roomName,
@@ -892,7 +642,7 @@ io.on('connection', (socket) => {
           isPrivate: room.isPrivate,
           currentLanguage: room.currentLanguage,
           webrtcEnabled: true,
-          enhancedFeatures: true
+          simplifiedRoles: true
         },
         webrtcConfig: webrtcConfig
       });
@@ -903,7 +653,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Chat messages
+  // Chat messages (unchanged)
   socket.on('chatMessage', ({ roomId, message }) => {
     try {
       const userSession = userSessions[socket.id];
@@ -926,7 +676,7 @@ io.on('connection', (socket) => {
         timestamp: new Date().toISOString(),
         type: 'user',
         userId: user.userId,
-        senderRole: user.role
+        senderRole: user.roomRole // SIMPLIFIED: 'owner' or 'member'
       };
 
       if (!messageHistory[roomId]) messageHistory[roomId] = [];
@@ -944,7 +694,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Code changes
+  // Code changes (unchanged)
   socket.on('codeChange', ({ roomId, code, language }) => {
     const userSession = userSessions[socket.id];
     
@@ -964,7 +714,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Language changes
+  // Language changes - SIMPLIFIED: Only room owner can change language
   socket.on('languageChange', (data) => {
     const { roomId, language, code } = data;
     
@@ -985,8 +735,9 @@ io.on('connection', (socket) => {
         return;
       }
       
-      if (user.role !== 'owner' && user.role !== 'moderator') {
-        socket.emit('error', { message: 'Only room owner or moderator can change language' });
+      // SIMPLIFIED: Only room owner (creator) can change language
+      if (user.roomRole !== 'owner') {
+        socket.emit('error', { message: 'Only room creator can change language' });
         return;
       }
       
@@ -1014,7 +765,7 @@ io.on('connection', (socket) => {
       const langChangeMessage = {
         id: Date.now(),
         sender: 'System',
-        message: `${user.username} changed the coding language to ${language.toUpperCase()}`,
+        message: `${user.username} (room creator) changed the coding language to ${language.toUpperCase()}`,
         timestamp: new Date().toISOString(),
         type: 'system'
       };
@@ -1029,7 +780,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Typing indicators
+  // Typing indicators (unchanged)
   socket.on('typing', ({ roomId, isTyping }) => {
     const userSession = userSessions[socket.id];
     
@@ -1041,11 +792,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // =============================================================================
-  // ENHANCED WEBRTC VOICE CHAT IMPLEMENTATION WITH FIXES
-  // =============================================================================
-
-  // ENHANCED: Join voice room with better timing and conflict prevention
+  // WebRTC voice chat events (unchanged functionality)
   socket.on('join-voice-room', ({ roomId, userInfo }) => {
     try {
       console.log(`🎙️ ${userInfo.username} joining voice room ${roomId}`);
@@ -1056,16 +803,13 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Initialize voice room if it doesn't exist
       if (!voiceRooms[roomId]) {
         voiceRooms[roomId] = [];
         activePeers[roomId] = {};
       }
 
-      // ENHANCED: Check if user is already in voice room
       const existingIndex = voiceRooms[roomId].findIndex(u => u.userId === userInfo.userId);
       if (existingIndex !== -1) {
-        // Update existing user's connection info instead of adding duplicate
         voiceRooms[roomId][existingIndex] = {
           ...voiceRooms[roomId][existingIndex],
           socketId: socket.id,
@@ -1073,7 +817,6 @@ io.on('connection', (socket) => {
         };
         console.log(`🔄 Updated connection info for ${userInfo.username}`);
       } else {
-        // Add new user to voice room
         const voiceUser = {
           userId: userInfo.userId,
           username: userInfo.username,
@@ -1082,7 +825,6 @@ io.on('connection', (socket) => {
         };
         voiceRooms[roomId].push(voiceUser);
         
-        // Initialize peer tracking for this user
         if (!activePeers[roomId][userInfo.userId]) {
           activePeers[roomId][userInfo.userId] = [];
         }
@@ -1090,7 +832,6 @@ io.on('connection', (socket) => {
 
       console.log(`✅ ${userInfo.username} in voice room. Total: ${voiceRooms[roomId].length}`);
 
-      // ENHANCED: Clean up stale voice users with better detection
       voiceRooms[roomId] = voiceRooms[roomId].filter(voiceUser => {
         const targetSocket = io.sockets.sockets.get(voiceUser.socketId);
         const isActive = targetSocket && targetSocket.connected;
@@ -1105,10 +846,8 @@ io.on('connection', (socket) => {
         return isActive || voiceUser.userId === userInfo.userId;
       });
 
-      // Get list of other users already in voice room
       const otherUsers = voiceRooms[roomId].filter(u => u.userId !== userInfo.userId);
       
-      // CRITICAL FIX: Send existing users to the new joiner IMMEDIATELY
       if (otherUsers.length > 0) {
         console.log(`📡 Sending ${otherUsers.length} existing voice users to ${userInfo.username}`);
         socket.emit('voice-room-users', {
@@ -1119,14 +858,12 @@ io.on('connection', (socket) => {
         });
       }
 
-      // CRITICAL FIX: Enhanced notification timing with conflict-aware delays
       setTimeout(() => {
         const currentOtherUsers = voiceRooms[roomId].filter(u => u.userId !== userInfo.userId);
         
         currentOtherUsers.forEach((existingUser, index) => {
           const targetSocket = io.sockets.sockets.get(existingUser.socketId);
           if (targetSocket && targetSocket.connected) {
-            // ENHANCED: Stagger notifications with longer delays for stability
             setTimeout(() => {
               targetSocket.emit('user-joined-voice', {
                 userInfo: {
@@ -1135,12 +872,11 @@ io.on('connection', (socket) => {
                 }
               });
               console.log(`📡 Notified ${existingUser.username} about ${userInfo.username} joining`);
-            }, index * 1000); // 1 second between notifications
+            }, index * 1000);
           }
         });
-      }, 2000); // INCREASED: 2 second initial delay (was 1s)
+      }, 2000);
 
-      // Send success confirmation
       socket.emit('voice-room-joined', {
         roomId,
         userInfo,
@@ -1154,7 +890,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ENHANCED: Leave voice room with better cleanup
+  // Leave voice room (unchanged)
   socket.on('leave-voice-room', ({ roomId, userInfo }) => {
     try {
       console.log(`🎙️ ${userInfo.username} leaving voice room ${roomId}`);
@@ -1164,7 +900,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Find and remove user with better error handling
       const userIndex = voiceRooms[roomId].findIndex(u => u.userId === userInfo.userId);
       if (userIndex === -1) {
         console.log(`❌ User ${userInfo.username} not found in voice room`);
@@ -1174,12 +909,10 @@ io.on('connection', (socket) => {
       const leavingUser = voiceRooms[roomId][userIndex];
       voiceRooms[roomId].splice(userIndex, 1);
 
-      // ENHANCED: Comprehensive peer connection cleanup
       if (activePeers[roomId] && activePeers[roomId][userInfo.userId]) {
         delete activePeers[roomId][userInfo.userId];
       }
 
-      // ENHANCED: Remove this user from all other users' peer lists
       Object.keys(activePeers[roomId] || {}).forEach(otherUserId => {
         if (activePeers[roomId][otherUserId]) {
           activePeers[roomId][otherUserId] = activePeers[roomId][otherUserId].filter(
@@ -1190,12 +923,10 @@ io.on('connection', (socket) => {
 
       console.log(`✅ ${userInfo.username} left voice room. Remaining: ${voiceRooms[roomId].length}`);
 
-      // ENHANCED: Notify remaining users with better timing
       const remainingUsers = voiceRooms[roomId];
       remainingUsers.forEach((user, index) => {
         const targetSocket = io.sockets.sockets.get(user.socketId);
         if (targetSocket && targetSocket.connected) {
-          // ENHANCED: Stagger notifications to prevent conflicts
           setTimeout(() => {
             targetSocket.emit('user-left-voice', {
               userInfo: {
@@ -1205,18 +936,16 @@ io.on('connection', (socket) => {
               reason: 'user_left',
               timestamp: Date.now()
             });
-          }, index * 100); // 100ms between notifications
+          }, index * 100);
         }
       });
 
-      // ENHANCED: Send confirmation with stats
       socket.emit('voice-room-left', {
         roomId,
         userInfo,
         remainingUsers: remainingUsers.length
       });
 
-      // ENHANCED: Clean up empty voice room
       if (voiceRooms[roomId].length === 0) {
         delete voiceRooms[roomId];
         delete activePeers[roomId];
@@ -1229,12 +958,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ENHANCED: WebRTC Signal Handling with better validation and timing
+  // WebRTC signaling (unchanged)
   socket.on('webrtc-signal', ({ targetUserId, signal, callerInfo, roomId }) => {
     try {
       console.log(`📞 WebRTC signal from ${callerInfo.username} to ${targetUserId} (type: ${signal?.type})`);
       
-      // ENHANCED: Comprehensive input validation
       if (!signal || !targetUserId || !callerInfo || !roomId) {
         console.error('❌ Invalid WebRTC signal data');
         socket.emit('webrtc-error', { 
@@ -1244,7 +972,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Verify caller is in voice room with better error messages
       if (!voiceRooms[roomId] || !voiceRooms[roomId].find(u => u.userId === callerInfo.userId)) {
         console.error(`❌ Caller ${callerInfo.username} not in voice room`);
         socket.emit('webrtc-error', { 
@@ -1255,7 +982,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Find target user with better error handling
       const targetUser = voiceRooms[roomId].find(u => u.userId === targetUserId);
       if (!targetUser) {
         console.error(`❌ Target user ${targetUserId} not found in voice room`);
@@ -1267,12 +993,10 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Get target socket with connection validation
       const targetSocket = io.sockets.sockets.get(targetUser.socketId);
       if (!targetSocket || !targetSocket.connected) {
         console.error(`❌ Target user ${targetUser.username} socket not available`);
         
-        // ENHANCED: Remove stale user from voice room immediately
         voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== targetUserId);
         
         socket.emit('webrtc-error', { 
@@ -1283,16 +1007,13 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Track peer connection attempt with timestamps
       if (!activePeers[roomId]) activePeers[roomId] = {};
       if (!activePeers[roomId][callerInfo.userId]) activePeers[roomId][callerInfo.userId] = [];
       
-      // ENHANCED: Prevent duplicate tracking
       if (!activePeers[roomId][callerInfo.userId].includes(targetUserId)) {
         activePeers[roomId][callerInfo.userId].push(targetUserId);
       }
 
-      // ENHANCED: Forward signal with additional metadata for debugging
       const signalData = {
         signal,
         callerInfo: {
@@ -1301,13 +1022,12 @@ io.on('connection', (socket) => {
         },
         roomId,
         timestamp: Date.now(),
-        serverProcessed: true // Server processing confirmation
+        serverProcessed: true
       };
 
       console.log(`📡 Forwarding WebRTC signal to ${targetUser.username}`);
       targetSocket.emit('webrtc-signal', signalData);
 
-      // ENHANCED: Send acknowledgment to caller with timing info
       socket.emit('webrtc-signal-sent', {
         targetUserId,
         signalType: signal.type,
@@ -1326,12 +1046,11 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ENHANCED: WebRTC Answer Handling with better validation
+  // WebRTC answer (unchanged)
   socket.on('webrtc-answer', ({ targetUserId, signal, answererInfo, roomId }) => {
     try {
       console.log(`📞 WebRTC answer from ${answererInfo.username} to ${targetUserId} (type: ${signal?.type})`);
       
-      // ENHANCED: Comprehensive input validation
       if (!signal || !targetUserId || !answererInfo || !roomId) {
         console.error('❌ Invalid WebRTC answer data');
         socket.emit('webrtc-error', { 
@@ -1342,7 +1061,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Verify answerer is in voice room
       if (!voiceRooms[roomId] || !voiceRooms[roomId].find(u => u.userId === answererInfo.userId)) {
         console.error(`❌ Answerer ${answererInfo.username} not in voice room`);
         socket.emit('webrtc-error', { 
@@ -1353,7 +1071,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Find target user (original caller) with better error handling
       const targetUser = voiceRooms[roomId].find(u => u.userId === targetUserId);
       if (!targetUser) {
         console.error(`❌ Target user ${targetUserId} not found in voice room`);
@@ -1365,12 +1082,10 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Get target socket with validation
       const targetSocket = io.sockets.sockets.get(targetUser.socketId);
       if (!targetSocket || !targetSocket.connected) {
         console.error(`❌ Target user ${targetUser.username} socket not available`);
         
-        // ENHANCED: Remove stale user
         voiceRooms[roomId] = voiceRooms[roomId].filter(u => u.userId !== targetUserId);
         
         socket.emit('webrtc-error', { 
@@ -1381,7 +1096,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // ENHANCED: Track bidirectional peer connection
       if (!activePeers[roomId]) activePeers[roomId] = {};
       if (!activePeers[roomId][answererInfo.userId]) activePeers[roomId][answererInfo.userId] = [];
       
@@ -1389,7 +1103,6 @@ io.on('connection', (socket) => {
         activePeers[roomId][answererInfo.userId].push(targetUserId);
       }
 
-      // ENHANCED: Forward answer with metadata
       const answerData = {
         signal,
         answererInfo: {
@@ -1404,7 +1117,6 @@ io.on('connection', (socket) => {
       console.log(`📡 Forwarding WebRTC answer to ${targetUser.username}`);
       targetSocket.emit('webrtc-answer', answerData);
 
-      // ENHANCED: Send acknowledgment to answerer
       socket.emit('webrtc-answer-sent', {
         targetUserId,
         signalType: signal.type,
@@ -1425,7 +1137,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ENHANCED: Enhanced disconnect handling for voice chat
+  // Enhanced disconnect handling
   socket.on('disconnect', (reason) => {
     console.log(`🔌 User disconnected: ${socket.username || 'Unknown'} (${socket.id}) - Reason: ${reason}`);
     
@@ -1442,7 +1154,6 @@ io.on('connection', (socket) => {
         
         console.log(`❌ ${username} left room ${roomId}`);
 
-        // Send leave message
         const leaveMessage = {
           id: Date.now(),
           sender: 'System',
@@ -1452,11 +1163,10 @@ io.on('connection', (socket) => {
         };
         socket.to(roomId).emit('message', leaveMessage);
 
-        // Update room users
         io.to(roomId).emit('roomUsers', rooms[roomId]);
       }
 
-      // ENHANCED: Clean up from voice room with better notification timing
+      // Clean up from voice room
       if (voiceRooms[roomId]) {
         const voiceUserIndex = voiceRooms[roomId].findIndex(u => u.socketId === socket.id);
         if (voiceUserIndex !== -1) {
@@ -1465,12 +1175,10 @@ io.on('connection', (socket) => {
           
           console.log(`🎙️ ${leavingVoiceUser.username} removed from voice room on disconnect`);
           
-          // ENHANCED: Clean up peer connections for this user
           if (activePeers[roomId] && activePeers[roomId][userId]) {
             delete activePeers[roomId][userId];
           }
 
-          // ENHANCED: Remove this user from other users' peer lists
           Object.keys(activePeers[roomId] || {}).forEach(otherUserId => {
             if (activePeers[roomId][otherUserId]) {
               activePeers[roomId][otherUserId] = activePeers[roomId][otherUserId].filter(
@@ -1479,7 +1187,6 @@ io.on('connection', (socket) => {
             }
           });
           
-          // ENHANCED: Notify remaining voice users with proper timing
           const remainingVoiceUsers = voiceRooms[roomId];
           remainingVoiceUsers.forEach((voiceUser, index) => {
             const targetSocket = io.sockets.sockets.get(voiceUser.socketId);
@@ -1493,11 +1200,10 @@ io.on('connection', (socket) => {
                   reason: 'disconnected',
                   timestamp: Date.now()
                 });
-              }, index * 200); // 200ms between notifications
+              }, index * 200);
             }
           });
 
-          // ENHANCED: Update voice room status with delay
           setTimeout(() => {
             io.to(roomId).emit('voice-room-status', {
               totalVoiceUsers: voiceRooms[roomId].length,
@@ -1507,9 +1213,8 @@ io.on('connection', (socket) => {
               })),
               timestamp: Date.now()
             });
-          }, 1000); // 1 second delay for status update
+          }, 1000);
 
-          // ENHANCED: Clean up empty voice room
           if (voiceRooms[roomId].length === 0) {
             delete voiceRooms[roomId];
             delete activePeers[roomId];
@@ -1520,24 +1225,17 @@ io.on('connection', (socket) => {
     }
     
     delete userSessions[socket.id];
-    
-    // Schedule cleanup of empty rooms
     setTimeout(cleanupEmptyRooms, 5000);
   });
 });
 
-// =============================================================================
-// ENHANCED WEBRTC MAINTENANCE AND MONITORING
-// =============================================================================
-
-// ENHANCED: Periodic cleanup with better timing
+// Periodic cleanup
 setInterval(() => {
   Object.keys(voiceRooms).forEach(roomId => {
     if (!voiceRooms[roomId]) return;
     
     const beforeCount = voiceRooms[roomId].length;
     
-    // ENHANCED: Filter out users with disconnected sockets
     voiceRooms[roomId] = voiceRooms[roomId].filter(voiceUser => {
       const socket = io.sockets.sockets.get(voiceUser.socketId);
       const isActive = socket && socket.connected;
@@ -1545,12 +1243,10 @@ setInterval(() => {
       if (!isActive) {
         console.log(`🧹 Removing stale voice user: ${voiceUser.username} from room ${roomId}`);
         
-        // ENHANCED: Clean up peer connections for stale user
         if (activePeers[roomId] && activePeers[roomId][voiceUser.userId]) {
           delete activePeers[roomId][voiceUser.userId];
         }
         
-        // ENHANCED: Remove from other users' peer lists
         Object.keys(activePeers[roomId] || {}).forEach(otherUserId => {
           if (activePeers[roomId][otherUserId]) {
             activePeers[roomId][otherUserId] = activePeers[roomId][otherUserId].filter(
@@ -1568,7 +1264,6 @@ setInterval(() => {
     if (beforeCount !== afterCount) {
       console.log(`🧹 Cleaned up ${beforeCount - afterCount} stale users from voice room ${roomId}`);
       
-      // ENHANCED: Notify remaining users about updated voice room with delay
       if (afterCount > 0) {
         setTimeout(() => {
           io.to(roomId).emit('voice-room-status', {
@@ -1580,18 +1275,17 @@ setInterval(() => {
             cleanupPerformed: true,
             timestamp: Date.now()
           });
-        }, 500); // 500ms delay for cleanup notification
+        }, 500);
       }
     }
     
-    // ENHANCED: Clean up empty voice room
     if (voiceRooms[roomId].length === 0) {
       delete voiceRooms[roomId];
       delete activePeers[roomId];
       console.log(`🧹 Cleaned up empty voice room: ${roomId}`);
     }
   });
-}, 45000); // INCREASED: Run every 45 seconds (was 30s) for less aggressive cleanup
+}, 45000);
 
 // Enhanced logging for development
 if (NODE_ENV === 'development') {
@@ -1603,15 +1297,14 @@ if (NODE_ENV === 'development') {
     }, 0);
     
     if (totalVoiceUsers > 0) {
-      console.log(`🎙️ Enhanced Voice Chat Stats: ${totalVoiceRooms} rooms, ${totalVoiceUsers} users, ${totalPeerConnections} peer connections`);
+      console.log(`🎙️ Voice Chat Stats: ${totalVoiceRooms} rooms, ${totalVoiceUsers} users, ${totalPeerConnections} peer connections`);
       
-      // Log detailed room info
       Object.entries(voiceRooms).forEach(([roomId, users]) => {
         const peerCount = Object.keys(activePeers[roomId] || {}).length;
         console.log(`   Room ${roomId}: ${users.length} users, ${peerCount} peer groups`);
       });
     }
-  }, 60000); // Every minute
+  }, 60000);
 }
 
 // =============================================================================
@@ -1623,7 +1316,7 @@ app.use((error, req, res, next) => {
     error: 'Internal server error',
     message: NODE_ENV === 'development' ? error.message : 'Something went wrong',
     timestamp: new Date().toISOString(),
-    version: '4.0.0'
+    version: '5.0.0 - Simplified Roles'
   });
 });
 
@@ -1636,26 +1329,22 @@ app.use('*', (req, res) => {
       'GET /',
       'GET /health',
       'GET /api/health',
-      'GET /api/voice-chat/status',
-      'GET /api/webrtc/config',
-      'GET /api/room/:roomId/voice-status',
       'POST /api/auth/login',
       'POST /api/auth/signup',
       'POST /api/auth/verify',
       'POST /api/rooms/create',
       'GET /api/room/:roomId'
     ],
-    version: '4.0.0'
+    version: '5.0.0 - Simplified Roles'
   });
 });
 
 // =============================================================================
-// GRACEFUL SHUTDOWN WITH ENHANCED WEBRTC CLEANUP
+// GRACEFUL SHUTDOWN
 // =============================================================================
 const gracefulShutdown = (signal) => {
-  console.log(`🛑 Received ${signal}. Starting enhanced graceful shutdown...`);
+  console.log(`🛑 Received ${signal}. Starting graceful shutdown...`);
   
-  // Enhanced notification to voice users
   Object.entries(voiceRooms).forEach(([roomId, voiceUsers]) => {
     console.log(`📢 Notifying ${voiceUsers.length} voice users in room ${roomId} about shutdown`);
     
@@ -1667,43 +1356,39 @@ const gracefulShutdown = (signal) => {
           estimatedDowntime: '2-5 minutes',
           timestamp: new Date().toISOString(),
           reconnectInstructions: 'Please rejoin voice chat after the server restarts.',
-          enhancedFeatures: 'Server updated with improved connection stability'
+          simplifiedRoles: 'Server updated with simplified role system'
         });
       }
     });
     
-    // Send to entire room as well
     io.to(roomId).emit('voice-chat-shutdown', {
       message: 'Voice chat will be temporarily unavailable during server maintenance.',
       estimatedDowntime: '2-5 minutes',
       timestamp: new Date().toISOString(),
-      enhancements: 'Connection stability improvements applied'
+      improvements: 'Simplified role system - only room creators can change language'
     });
   });
   
-  // Notify all users
   io.emit('serverShutdown', {
     message: 'Server is shutting down for maintenance. Please reconnect in a few minutes.',
     timestamp: new Date().toISOString(),
     estimatedDowntime: '2-5 minutes',
-    improvements: 'Enhanced WebRTC voice chat with better connection stability'
+    improvements: 'Simplified role system - removed admin/moderator layers'
   });
 
-  // Enhanced final statistics
-  console.log('📊 Enhanced Final Statistics:');
+  console.log('📊 Final Statistics:');
   console.log(`   Active Rooms: ${Object.keys(roomsData).length}`);
   console.log(`   Active Users: ${Object.keys(userSessions).length}`);
   console.log(`   Voice Rooms: ${Object.keys(voiceRooms).length}`);
   console.log(`   Voice Users: ${Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0)}`);
   console.log(`   Peer Connections: ${Object.values(activePeers).reduce((sum, room) => Object.keys(room).length + sum, 0)}`);
-  console.log(`   Server Version: 4.0.0 (Enhanced WebRTC)`);
+  console.log(`   Server Version: 5.0.0 (Simplified Role System)`);
   
   server.close(() => {
     console.log('✅ HTTP server closed');
     process.exit(0);
   });
 
-  // Force close after 30 seconds
   setTimeout(() => {
     console.log('⚠️ Force closing server after 30 seconds');
     process.exit(1);
@@ -1726,62 +1411,60 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // =============================================================================
-// START SERVER WITH ENHANCED FEATURES
+// START SERVER WITH SIMPLIFIED ROLE SYSTEM
 // =============================================================================
 server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('🎉 ================================================================');
-  console.log('🚀 COTOG Backend - ENHANCED WebRTC Voice Chat Ready!');
+  console.log('🚀 COTOG Backend - SIMPLIFIED ROLE SYSTEM Ready!');
   console.log('🎉 ================================================================');
   console.log('');
   console.log(`📡 Server URL: http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
   console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
   console.log(`💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`);
-  console.log(`📋 Version: 4.0.0 (Enhanced WebRTC)`);
+  console.log(`📋 Version: 5.0.0 (Simplified Role System)`);
   console.log('');
-  console.log('📋 Demo Accounts:');
-  console.log('   👤 john.doe@example.com (User)');
-  console.log('   👑 sarah.wilson@example.com (Admin)');
-  console.log('   🛡️ alex.kim@example.com (Moderator)');
+  console.log('🔧 SIMPLIFIED ROLE SYSTEM:');
+  console.log('   ❌ REMOVED: Admin and Moderator roles');
+  console.log('   ✅ SIMPLIFIED: Only User role + Room Creator privileges');
+  console.log('   👤 User Role: Join rooms, edit code, chat, voice');
+  console.log('   👑 Room Creator: All user privileges + language control');
+  console.log('');
+  console.log('📋 Demo Accounts (All "user" role):');
+  console.log('   👤 john.doe@example.com');
+  console.log('   👤 sarah.wilson@example.com (was admin)');
+  console.log('   👤 alex.kim@example.com (was moderator)');
   console.log('   🔑 Password: password123');
   console.log('');
-  console.log('🎙️ ENHANCED WebRTC Voice Chat Features:');
-  console.log('   ✅ FIXED connection conflicts with user ID conflict resolution');
-  console.log('   ✅ Enhanced timing delays (2s initial, 1s stagger, 45s cleanup)');
-  console.log('   ✅ Improved stale user detection and cleanup');
-  console.log('   ✅ Better error handling with detailed messages');
-  console.log('   ✅ Enhanced peer connection state management');
-  console.log('   ✅ Comprehensive input validation and error recovery');
-  console.log('   ✅ Better graceful shutdown with voice chat cleanup');
+  console.log('🎙️ WebRTC Voice Chat Features:');
+  console.log('   ✅ Enhanced P2P voice communication');
+  console.log('   ✅ Connection conflict resolution');
+  console.log('   ✅ Improved timing and error handling');
+  console.log('   ✅ Comprehensive cleanup and recovery');
   console.log('');
-  console.log('🔧 Enhanced WebRTC Configuration:');
-  console.log(`   ICE Servers: ${iceServers.length} configured`);
-  console.log('   Audio Quality: High (Echo cancellation, Noise suppression)');
-  console.log('   Connection Type: Enhanced peer-to-peer with conflict resolution');
-  console.log('   Browser Support: Chrome, Firefox, Safari, Edge');
-  console.log('   Timing Fixes: 2s initial delay, 1s stagger between notifications');
-  console.log('   Cleanup Interval: 45s (optimized for stability)');
+  console.log('🏠 Room Management:');
+  console.log('   👑 Room Creator: Can change coding language');
+  console.log('   👤 Room Members: Can edit code, chat, and use voice');
+  console.log('   🔒 No admin/moderator privileges needed');
   console.log('');
-  console.log('📊 Enhanced API Endpoints:');
-  console.log('   GET /api/voice-chat/status - Enhanced voice chat statistics');
-  console.log('   GET /api/webrtc/config - Enhanced WebRTC configuration');
-  console.log('   GET /api/room/:roomId/voice-status - Enhanced room voice status');
+  console.log('📊 API Endpoints:');
+  console.log('   POST /api/rooms/create - Create new room (authenticated users)');
+  console.log('   GET /api/room/:roomId - Get room information');
+  console.log('   POST /api/auth/login - User authentication');
+  console.log('   POST /api/auth/signup - User registration (creates "user" role)');
   console.log('');
-  console.log('🔥 CRITICAL ENHANCEMENTS APPLIED:');
-  console.log('   ✅ Fixed WebRTC connection conflicts with user ID resolution');
-  console.log('   ✅ Enhanced notification timing and staggering');
-  console.log('   ✅ Improved error handling and validation');
-  console.log('   ✅ Better stale user detection and cleanup');
-  console.log('   ✅ Enhanced peer connection state tracking');
-  console.log('   ✅ Comprehensive input validation');
-  console.log('   ✅ Optimized cleanup intervals for stability');
+  console.log('🔥 ROLE SYSTEM SIMPLIFIED:');
+  console.log('   ✅ Removed complex admin/moderator hierarchies');
+  console.log('   ✅ Equal users with room creator having language control');
+  console.log('   ✅ Simplified permission checking');
+  console.log('   ✅ Cleaner codebase and easier maintenance');
+  console.log('   ✅ Better user experience - no confusing role restrictions');
   console.log('');
-  console.log('✅ ENHANCED WebRTC voice chat implementation ready!');
-  console.log('🎯 Expected: 95%+ connection success with conflict resolution!');
-  console.log('⚡ Enhanced connection establishment: 2-4 seconds');
-  console.log('🔄 Automatic reconnection and enhanced cleanup working!');
-  console.log('🎉 All connection conflicts and timing issues RESOLVED!');
+  console.log('✅ SIMPLIFIED role system implementation ready!');
+  console.log('🎯 All users are equal - only room creators control language!');
+  console.log('⚡ Enhanced collaboration without administrative overhead!');
+  console.log('🎉 Clean, simple, and user-friendly permission system!');
   console.log('');
 });
 
@@ -1795,6 +1478,5 @@ module.exports = {
   voiceRooms,
   activePeers,
   webrtcConfig,
-  iceServers,
-  generateConnectionMatrix
+  iceServers
 };
