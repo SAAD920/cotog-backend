@@ -1,4 +1,4 @@
-// server.js - SIMPLIFIED ROLE SYSTEM VERSION
+// server.js - ROLE SYSTEM INDICATORS REMOVED
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -19,7 +19,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://cotog-collaborative-ed
 
 console.log('🚀 COTOG Backend Starting...');
 console.log('📊 Environment:', NODE_ENV);
-console.log('🌐 Port:', PORT);
+console.log('🌍 Port:', PORT);
 console.log('🔗 Frontend URL:', FRONTEND_URL);
 
 // =============================================================================
@@ -107,7 +107,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Max-Age', '86400');
   
   if (req.method === 'OPTIONS') {
-    console.log(`🔄 CORS preflight request from: ${origin}`);
+    console.log(`📄 CORS preflight request from: ${origin}`);
     res.status(200).end();
     return;
   }
@@ -130,7 +130,7 @@ app.use((req, res, next) => {
 // DATA STORES
 // =============================================================================
 
-// Demo users with pre-hashed passwords - SIMPLIFIED: All users have 'user' role
+// Demo users with pre-hashed passwords
 const hashedPassword = '$2b$10$8K1p/a0dW22FKWVvfvkOKuWm2F5F0vQw1Q5Q5Q5Q5Q5Q5Q5Q5Q5Q5';
 
 const users = [
@@ -142,7 +142,7 @@ const users = [
     firstName: 'John',
     lastName: 'Doe',
     avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff',
-    role: 'user', // SIMPLIFIED: Only 'user' role
+    role: 'user',
     createdAt: new Date('2024-01-15T10:30:00Z'),
     lastLogin: new Date(),
     isActive: true,
@@ -156,7 +156,7 @@ const users = [
     firstName: 'Sarah',
     lastName: 'Wilson',
     avatar: 'https://ui-avatars.com/api/?name=Sarah+Wilson&background=FF6B6B&color=fff',
-    role: 'user', // SIMPLIFIED: Changed from 'admin' to 'user'
+    role: 'user',
     createdAt: new Date('2024-01-20T09:15:00Z'),
     lastLogin: new Date(),
     isActive: true,
@@ -170,7 +170,7 @@ const users = [
     firstName: 'Alex',
     lastName: 'Kim',
     avatar: 'https://ui-avatars.com/api/?name=Alex+Kim&background=96CEB4&color=fff',
-    role: 'user', // SIMPLIFIED: Changed from 'moderator' to 'user'
+    role: 'user',
     createdAt: new Date('2024-02-15T08:30:00Z'),
     lastLogin: new Date(),
     isActive: true,
@@ -178,7 +178,7 @@ const users = [
   }
 ];
 
-// Room management - SIMPLIFIED ROLES
+// Room management
 const rooms = {}; // { roomId: [ { id, username, userId, joinedAt, roomRole } ] }
 const roomsData = {}; // Room metadata
 const messageHistory = {}; // Chat history
@@ -206,7 +206,7 @@ const webrtcConfig = {
 };
 
 // =============================================================================
-// USER SERVICE - SIMPLIFIED ROLE SYSTEM
+// USER SERVICE
 // =============================================================================
 const userService = {
   findByEmail: (email) => users.find(user => user.email.toLowerCase() === email.toLowerCase()),
@@ -235,7 +235,6 @@ const userService = {
     }
   },
 
-  // SIMPLIFIED: Only creates 'user' role
   createUser: async (userData) => {
     const { username, email, password, firstName, lastName } = userData;
     
@@ -253,7 +252,7 @@ const userService = {
       firstName,
       lastName,
       avatar: `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=${Math.floor(Math.random()*16777215).toString(16)}&color=fff`,
-      role: 'user', // SIMPLIFIED: Only 'user' role
+      role: 'user',
       createdAt: new Date(),
       lastLogin: null,
       isActive: true,
@@ -270,11 +269,10 @@ const userService = {
     if (user) user.lastLogin = new Date();
   },
 
-  // SIMPLIFIED: getUserStats removed admin/moderator counts
   getUserStats: () => ({
     totalUsers: users.length,
     activeUsers: users.filter(u => u.isActive).length,
-    regularUsers: users.filter(u => u.role === 'user').length // Only regular users now
+    regularUsers: users.filter(u => u.role === 'user').length
   })
 };
 
@@ -319,7 +317,7 @@ const authenticateSocket = (socket, next) => {
 
     socket.userId = user.id;
     socket.username = user.username;
-    socket.userRole = user.role; // Always 'user' now
+    socket.userRole = user.role;
     socket.webrtcSessionId = `${user.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     next();
   });
@@ -350,14 +348,13 @@ const cleanupEmptyRooms = () => {
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'COTOG Backend API - Simplified Role System',
+    message: 'COTOG Backend API',
     status: 'running',
     version: '5.0.0',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
     roleSystem: {
-      simplified: true,
-      description: 'Only user role + room creator privileges',
+      description: 'User role + room creator privileges',
       userRole: 'Standard user - can join rooms, edit code, chat, voice',
       roomCreator: 'Room owner - has language control and room management'
     },
@@ -374,8 +371,7 @@ app.get('/', (req, res) => {
       websocket: 'Socket.IO v4 enabled',
       webrtc: 'Enhanced P2P voice chat',
       cors: 'Multi-origin enabled',
-      signaling: 'Enhanced WebRTC signaling',
-      roleSystem: 'Simplified - no admin/moderator layers'
+      signaling: 'Enhanced WebRTC signaling'
     }
   });
 });
@@ -391,7 +387,7 @@ app.get('/health', (req, res) => {
     uptime: uptime,
     uptimeFormatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${Math.floor(uptime % 60)}s`,
     environment: NODE_ENV,
-    version: '5.0.0 - Simplified Roles',
+    version: '5.0.0',
     memory: {
       rss: `${Math.round(memoryUsage.rss / 1024 / 1024)} MB`,
       heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`,
@@ -405,16 +401,15 @@ app.get('/health', (req, res) => {
     peerConnections: Object.values(activePeers).reduce((sum, room) => Object.keys(room).length + sum, 0),
     frontendUrl: FRONTEND_URL,
     corsEnabled: true,
-    webrtcEnabled: true,
-    roleSystemSimplified: true
+    webrtcEnabled: true
   });
 });
 
-// Authentication routes (unchanged)
+// Authentication routes
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
-    console.log(`🔍 Login attempt for: ${email}`);
+    console.log(`🔐 Login attempt for: ${email}`);
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -451,7 +446,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Room creation (simplified - no admin checks)
+// Room creation
 app.post('/api/rooms/create', authenticateToken, (req, res) => {
   try {
     const { roomName, password, maxUsers, isPrivate, description } = req.body;
@@ -506,8 +501,7 @@ app.post('/api/rooms/create', authenticateToken, (req, res) => {
         isPrivate: roomsData[roomId].isPrivate,
         description: roomsData[roomId].description,
         currentLanguage: roomsData[roomId].currentLanguage,
-        webrtcEnabled: true,
-        simplifiedRoles: true
+        webrtcEnabled: true
       }
     });
 
@@ -538,8 +532,7 @@ app.get('/api/room/:roomId', (req, res) => {
       currentLanguage: room.currentLanguage,
       voiceUsers: voiceRooms[roomId]?.length || 0,
       webrtcEnabled: true,
-      webrtcConfig: webrtcConfig,
-      simplifiedRoles: true
+      webrtcConfig: webrtcConfig
     });
 
   } catch (error) {
@@ -549,7 +542,7 @@ app.get('/api/room/:roomId', (req, res) => {
 });
 
 // =============================================================================
-// SOCKET.IO CONNECTION HANDLING - SIMPLIFIED ROLE SYSTEM
+// SOCKET.IO CONNECTION HANDLING
 // =============================================================================
 io.use(authenticateSocket);
 
@@ -559,14 +552,14 @@ io.on('connection', (socket) => {
   userSessions[socket.id] = {
     userId: socket.userId,
     username: socket.username,
-    userRole: socket.userRole, // Always 'user' now
+    userRole: socket.userRole,
     roomId: null,
     connectedAt: new Date(),
     webrtcSessionId: socket.webrtcSessionId,
     browser: socket.handshake.headers['user-agent']?.includes('Chrome') ? 'Chrome' : 'Other'
   };
 
-  // Join room - SIMPLIFIED ROLE LOGIC
+  // Join room
   socket.on('joinRoom', ({ roomId, roomPassword }) => {
     try {
       console.log(`🚪 User ${socket.username} attempting to join room ${roomId}`);
@@ -598,10 +591,10 @@ io.on('connection', (socket) => {
       socket.join(roomId);
       userSessions[socket.id].roomId = roomId;
       
-      // SIMPLIFIED: Only 'owner' (room creator) or 'member' roles
+      // Determine room role: 'owner' (room creator) or 'member'
       let roomRole = 'member';
       if (room.createdBy === socket.userId) {
-        roomRole = 'owner'; // Room creator gets owner privileges
+        roomRole = 'owner';
       }
       
       if (!rooms[roomId]) rooms[roomId] = [];
@@ -610,11 +603,11 @@ io.on('connection', (socket) => {
         userId: socket.userId,
         username: socket.username,
         joinedAt: new Date(),
-        roomRole: roomRole, // SIMPLIFIED: 'owner' or 'member'
+        roomRole: roomRole,
         webrtcSessionId: socket.webrtcSessionId
       });
 
-      console.log(`📥 ${socket.username} joined room ${roomId} as ${roomRole}`);
+      console.log(`🔥 ${socket.username} joined room ${roomId} as ${roomRole}`);
 
       if (messageHistory[roomId]) {
         socket.emit('chatHistory', messageHistory[roomId]);
@@ -632,7 +625,7 @@ io.on('connection', (socket) => {
       socket.emit('joinSuccess', {
         roomId,
         username: socket.username,
-        userRole: roomRole, // Send simplified role
+        userRole: roomRole,
         webrtcSessionId: socket.webrtcSessionId,
         roomInfo: {
           roomName: room.roomName,
@@ -641,8 +634,7 @@ io.on('connection', (socket) => {
           description: room.description,
           isPrivate: room.isPrivate,
           currentLanguage: room.currentLanguage,
-          webrtcEnabled: true,
-          simplifiedRoles: true
+          webrtcEnabled: true
         },
         webrtcConfig: webrtcConfig
       });
@@ -653,7 +645,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Chat messages (unchanged)
+  // Chat messages
   socket.on('chatMessage', ({ roomId, message }) => {
     try {
       const userSession = userSessions[socket.id];
@@ -676,7 +668,7 @@ io.on('connection', (socket) => {
         timestamp: new Date().toISOString(),
         type: 'user',
         userId: user.userId,
-        senderRole: user.roomRole // SIMPLIFIED: 'owner' or 'member'
+        senderRole: user.roomRole
       };
 
       if (!messageHistory[roomId]) messageHistory[roomId] = [];
@@ -694,7 +686,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Code changes (unchanged)
+  // Code changes
   socket.on('codeChange', ({ roomId, code, language }) => {
     const userSession = userSessions[socket.id];
     
@@ -714,7 +706,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Language changes - SIMPLIFIED: Only room owner can change language
+  // Language changes - Only room owner can change language
   socket.on('languageChange', (data) => {
     const { roomId, language, code } = data;
     
@@ -735,7 +727,7 @@ io.on('connection', (socket) => {
         return;
       }
       
-      // SIMPLIFIED: Only room owner (creator) can change language
+      // Only room owner (creator) can change language
       if (user.roomRole !== 'owner') {
         socket.emit('error', { message: 'Only room creator can change language' });
         return;
@@ -780,7 +772,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Typing indicators (unchanged)
+  // Typing indicators
   socket.on('typing', ({ roomId, isTyping }) => {
     const userSession = userSessions[socket.id];
     
@@ -792,7 +784,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // WebRTC voice chat events (unchanged functionality)
+  // WebRTC voice chat events
   socket.on('join-voice-room', ({ roomId, userInfo }) => {
     try {
       console.log(`🎙️ ${userInfo.username} joining voice room ${roomId}`);
@@ -890,7 +882,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Leave voice room (unchanged)
+  // Leave voice room
   socket.on('leave-voice-room', ({ roomId, userInfo }) => {
     try {
       console.log(`🎙️ ${userInfo.username} leaving voice room ${roomId}`);
@@ -958,7 +950,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // WebRTC signaling (unchanged)
+  // WebRTC signaling
   socket.on('webrtc-signal', ({ targetUserId, signal, callerInfo, roomId }) => {
     try {
       console.log(`📞 WebRTC signal from ${callerInfo.username} to ${targetUserId} (type: ${signal?.type})`);
@@ -1046,7 +1038,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // WebRTC answer (unchanged)
+  // WebRTC answer
   socket.on('webrtc-answer', ({ targetUserId, signal, answererInfo, roomId }) => {
     try {
       console.log(`📞 WebRTC answer from ${answererInfo.username} to ${targetUserId} (type: ${signal?.type})`);
@@ -1316,7 +1308,7 @@ app.use((error, req, res, next) => {
     error: 'Internal server error',
     message: NODE_ENV === 'development' ? error.message : 'Something went wrong',
     timestamp: new Date().toISOString(),
-    version: '5.0.0 - Simplified Roles'
+    version: '5.0.0'
   });
 });
 
@@ -1335,7 +1327,7 @@ app.use('*', (req, res) => {
       'POST /api/rooms/create',
       'GET /api/room/:roomId'
     ],
-    version: '5.0.0 - Simplified Roles'
+    version: '5.0.0'
   });
 });
 
@@ -1355,8 +1347,7 @@ const gracefulShutdown = (signal) => {
           message: 'Voice chat will be temporarily unavailable during server maintenance.',
           estimatedDowntime: '2-5 minutes',
           timestamp: new Date().toISOString(),
-          reconnectInstructions: 'Please rejoin voice chat after the server restarts.',
-          simplifiedRoles: 'Server updated with simplified role system'
+          reconnectInstructions: 'Please rejoin voice chat after the server restarts.'
         });
       }
     });
@@ -1364,16 +1355,14 @@ const gracefulShutdown = (signal) => {
     io.to(roomId).emit('voice-chat-shutdown', {
       message: 'Voice chat will be temporarily unavailable during server maintenance.',
       estimatedDowntime: '2-5 minutes',
-      timestamp: new Date().toISOString(),
-      improvements: 'Simplified role system - only room creators can change language'
+      timestamp: new Date().toISOString()
     });
   });
   
   io.emit('serverShutdown', {
     message: 'Server is shutting down for maintenance. Please reconnect in a few minutes.',
     timestamp: new Date().toISOString(),
-    estimatedDowntime: '2-5 minutes',
-    improvements: 'Simplified role system - removed admin/moderator layers'
+    estimatedDowntime: '2-5 minutes'
   });
 
   console.log('📊 Final Statistics:');
@@ -1382,7 +1371,7 @@ const gracefulShutdown = (signal) => {
   console.log(`   Voice Rooms: ${Object.keys(voiceRooms).length}`);
   console.log(`   Voice Users: ${Object.values(voiceRooms).reduce((sum, room) => sum + room.length, 0)}`);
   console.log(`   Peer Connections: ${Object.values(activePeers).reduce((sum, room) => Object.keys(room).length + sum, 0)}`);
-  console.log(`   Server Version: 5.0.0 (Simplified Role System)`);
+  console.log(`   Server Version: 5.0.0`);
   
   server.close(() => {
     console.log('✅ HTTP server closed');
@@ -1411,30 +1400,28 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // =============================================================================
-// START SERVER WITH SIMPLIFIED ROLE SYSTEM
+// START SERVER
 // =============================================================================
 server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('🎉 ================================================================');
-  console.log('🚀 COTOG Backend - SIMPLIFIED ROLE SYSTEM Ready!');
+  console.log('🚀 COTOG Backend Ready!');
   console.log('🎉 ================================================================');
   console.log('');
   console.log(`📡 Server URL: http://localhost:${PORT}`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
   console.log(`🔗 Frontend URL: ${FRONTEND_URL}`);
   console.log(`💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`);
-  console.log(`📋 Version: 5.0.0 (Simplified Role System)`);
+  console.log(`📋 Version: 5.0.0`);
   console.log('');
-  console.log('🔧 SIMPLIFIED ROLE SYSTEM:');
-  console.log('   ❌ REMOVED: Admin and Moderator roles');
-  console.log('   ✅ SIMPLIFIED: Only User role + Room Creator privileges');
+  console.log('🔧 Role System:');
   console.log('   👤 User Role: Join rooms, edit code, chat, voice');
   console.log('   👑 Room Creator: All user privileges + language control');
   console.log('');
   console.log('📋 Demo Accounts (All "user" role):');
   console.log('   👤 john.doe@example.com');
-  console.log('   👤 sarah.wilson@example.com (was admin)');
-  console.log('   👤 alex.kim@example.com (was moderator)');
+  console.log('   👤 sarah.wilson@example.com');
+  console.log('   👤 alex.kim@example.com');
   console.log('   🔑 Password: password123');
   console.log('');
   console.log('🎙️ WebRTC Voice Chat Features:');
@@ -1446,7 +1433,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('🏠 Room Management:');
   console.log('   👑 Room Creator: Can change coding language');
   console.log('   👤 Room Members: Can edit code, chat, and use voice');
-  console.log('   🔒 No admin/moderator privileges needed');
   console.log('');
   console.log('📊 API Endpoints:');
   console.log('   POST /api/rooms/create - Create new room (authenticated users)');
@@ -1454,17 +1440,9 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('   POST /api/auth/login - User authentication');
   console.log('   POST /api/auth/signup - User registration (creates "user" role)');
   console.log('');
-  console.log('🔥 ROLE SYSTEM SIMPLIFIED:');
-  console.log('   ✅ Removed complex admin/moderator hierarchies');
-  console.log('   ✅ Equal users with room creator having language control');
-  console.log('   ✅ Simplified permission checking');
-  console.log('   ✅ Cleaner codebase and easier maintenance');
-  console.log('   ✅ Better user experience - no confusing role restrictions');
-  console.log('');
-  console.log('✅ SIMPLIFIED role system implementation ready!');
-  console.log('🎯 All users are equal - only room creators control language!');
-  console.log('⚡ Enhanced collaboration without administrative overhead!');
-  console.log('🎉 Clean, simple, and user-friendly permission system!');
+  console.log('✅ Server ready for collaborative coding!');
+  console.log('🎯 Equal users with room creator language control!');
+  console.log('⚡ Enhanced collaboration platform!');
   console.log('');
 });
 
